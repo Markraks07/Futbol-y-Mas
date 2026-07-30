@@ -9,14 +9,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
-    <!-- Navegación -->
+    
+   <!-- Navegación con Menú Hamburguesa -->
     <nav class="navbar">
         <div class="logo">FYM</div>
-        <div class="nav-links">
-            <a href="#noticias">Noticias y Debates</a>
-            <a href="#club10">El Club de los 10</a>
-            <a href="https://whatsapp.com/channel/0029Vb6WOpE4IBhE9to6Du2U" target="_blank" class="btn-whatsapp">Únete al Canal</a>
+        <!-- Botón Hamburguesa (Solo visible en móvil) -->
+        <button class="hamburger" id="hamburger-btn">
+            <svg viewBox="0 0 100 80" width="30" height="30" fill="white">
+                <rect width="100" height="15" rx="8"></rect>
+                <rect y="30" width="100" height="15" rx="8"></rect>
+                <rect y="60" width="100" height="15" rx="8"></rect>
+            </svg>
+        </button>
+        <!-- Enlaces -->
+        <div class="nav-links" id="nav-links">
+            <a href="#que-es">¿Qué hacemos?</a>
+            <a href="#noticias">Noticias</a>
+            <a href="#club10">Club de los 10</a>
+            <a href="admin.html" class="btn-admin">⚙️ Admin</a>
+            <a href="URL_DE_TU_WHATSAPP" target="_blank" class="btn-whatsapp">Únete al Canal</a>
         </div>
     </nav>
 
@@ -29,6 +40,29 @@
             <a href="https://whatsapp.com/channel/0029Vb6WOpE4IBhE9to6Du2U" target="_blank" class="btn-epic">ENTRAR AL TERRENO DE JUEGO</a>
         </div>
     </header>
+
+    <!-- NUEVA SECCIÓN: ¿Qué es FYM? -->
+    <section id="que-es" class="section-que-es">
+        <h2 class="section-title">¿Qué hacemos en FYM?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>🗣️ Noticias y Debates</h3>
+                <p>No solo subimos noticias diarias, lo importante es el debate. Abrimos el tema y la comunidad decide, opina y vota.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📊 Encuestas</h3>
+                <p>Lanzamos encuestas semanales: "¿Quién gana la Champions?", "¿MVP?". Tú decides el contenido.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🎯 Porras y Retos</h3>
+                <p>Activamos porras antes de partidos grandes. Si aciertas o eres el más activo, ganas premios.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🏆 Club de los 10</h3>
+                <p>Solo 10 carnets oficiales. Se entregan a los más activos. Eres parte de la élite de la comunidad.</p>
+            </div>
+        </div>
+    </section>
 
     <!-- Próximo Reto / Porra -->
     <section class="section-reto">

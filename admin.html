@@ -3,45 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FYM | Panel de Administración</title>
+    <title>FYM | Dashboard Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
-        .admin-card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        button { background: #e53e3e; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
-        input, select, textarea { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+        :root { --bg: #0a0a0a; --panel: #111; --accent: #e53e3e; --text: #fff; }
+        body { margin: 0; font-family: 'Roboto', sans-serif; background: var(--bg); color: var(--text); }
+        h1, h2 { font-family: 'Oswald', sans-serif; text-transform: uppercase; }
+        
+        /* PANTALLA DE LOGIN */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .login-box { background: var(--panel); padding: 3rem; border-radius: 8px; border: 1px solid #333; text-align: center; }
+        .login-box input { padding: 10px; width: 100%; margin: 15px 0; background: #222; border: 1px solid #444; color: white; }
+        .login-box button { background: var(--accent); color: white; padding: 10px 20px; border: none; cursor: pointer; width: 100%; font-weight: bold; }
+        .error-msg { color: var(--accent); display: none; margin-top: 10px; font-size: 0.9rem; }
+
+        /* DASHBOARD PRINCIPAL (Oculto por defecto) */
+        #dashboard { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem; }
+        .header a { color: #888; text-decoration: none; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+        .card { background: var(--panel); padding: 2rem; border-radius: 8px; border: 1px solid #222; }
+        .card h2 { color: var(--accent); margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        
+        input, select, textarea { width: 100%; padding: 10px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; }
+        button { background: var(--accent); color: white; border: none; padding: 12px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #c53030; }
+        
+        .btn-theme { width: 100%; margin-bottom: 10px; background: #333; }
+        .btn-theme:hover { background: #555; }
     </style>
 </head>
 <body>
 
-    <h1>Panel de Control FYM</h1>
-
-    <!-- Gestión del Tema de la Web -->
-    <div class="admin-card">
-        <h2>🎨 Apariencia de la Web</h2>
-        <p>Cambia el tema visual para todos los usuarios en tiempo real.</p>
-        <button id="btn-tema-oscuro" style="background: #1a1a1a;">Tema Oscuro (Por defecto)</button>
-        <button id="btn-tema-claro" style="background: #e2e8f0; color: black;">Tema Claro (Día)</button>
-        <button id="btn-tema-match" style="background: #25D366;">Tema "Día de Partido" (Especial)</button>
+    <!-- Pantalla de Seguridad -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h1 style="color: var(--accent);">ÁREA RESTRINGIDA</h1>
+            <p>Introduce la contraseña de administrador</p>
+            <input type="password" id="admin-pass" placeholder="Contraseña">
+            <button id="btn-login">ACCEDER</button>
+            <p class="error-msg" id="error-msg">Contraseña incorrecta.</p>
+            <a href="index.html" style="color: #666; display: block; margin-top: 20px; font-size: 0.8rem; text-decoration: none;">&larr; Volver a la web</a>
+        </div>
     </div>
 
-    <!-- Buscador de API de Partidos -->
-    <div class="admin-card">
-        <h2>⚽ Configurar Porra (Vía API)</h2>
-        <p>Busca los próximos partidos y publícalos en Firebase.</p>
-        <button id="btn-fetch-api">Obtener Partidos de La Liga (API)</button>
-        
-        <div id="lista-partidos-api" style="margin-top: 15px;"></div>
+    <!-- Contenido del Panel Admin -->
+    <div id="dashboard">
+        <div class="header">
+            <h1>Panel de Control <span style="color: var(--accent);">FYM</span></h1>
+            <a href="index.html">&larr; Ver página pública</a>
+        </div>
+
+        <div class="grid">
+            <!-- Gestión del Tema -->
+            <div class="card">
+                <h2>🎨 Apariencia Global</h2>
+                <p style="font-size: 0.9rem; color: #888;">Cambia el diseño de la web en tiempo real para todos.</p>
+                <button class="btn-theme" id="btn-tema-oscuro" style="border-left: 5px solid #000;">Modo Oscuro (Normal)</button>
+                <button class="btn-theme" id="btn-tema-claro" style="border-left: 5px solid #fff; color: #000; background: #ccc;">Modo Claro (Día)</button>
+                <button class="btn-theme" id="btn-tema-match" style="border-left: 5px solid #ffcc00;">Modo "Día de Partido"</button>
+            </div>
+
+            <!-- Publicar Noticias -->
+            <div class="card">
+                <h2>📰 Lanzar Novedad</h2>
+                <input type="text" id="news-cat" placeholder="Categoría (Ej: DEBATE, ÚLTIMA HORA)">
+                <input type="text" id="news-title" placeholder="Título impactante">
+                <textarea id="news-desc" rows="4" placeholder="Desarrolla el tema para que la comunidad debata..."></textarea>
+                <button id="btn-publicar-news" style="width: 100%;">PUBLICAR EN LA WEB</button>
+            </div>
+
+            <!-- Porras / Partidos -->
+            <div class="card">
+                <h2>⚽ Configurar Porra (API)</h2>
+                <p style="font-size: 0.9rem; color: #888;">Busca los próximos partidos y selecciona uno.</p>
+                <button id="btn-fetch-api" style="width: 100%; background: #25D366;">Buscar en la API</button>
+                <div id="lista-partidos-api" style="margin-top: 15px; max-height: 250px; overflow-y: auto;"></div>
+            </div>
+        </div>
     </div>
 
-    <!-- Gestión de Novedades/Noticias -->
-    <div class="admin-card">
-        <h2>📰 Añadir Novedad / Debate</h2>
-        <input type="text" id="news-cat" placeholder="Categoría (Ej: DEBATE, NOTICIA, FICHAJE)">
-        <input type="text" id="news-title" placeholder="Título del debate">
-        <textarea id="news-desc" rows="3" placeholder="Descripción o pregunta para la comunidad"></textarea>
-        <button id="btn-publicar-news">Publicar Novedad</button>
-    </div>
+    <!-- Script de Protección por Contraseña y Lógica Admin -->
+    <script type="module">
+        // 1. SISTEMA DE LOGIN SENCILLO
+        const CLAVE_SECRETA = "FYM2026"; // <-- CAMBIA ESTA CONTRASEÑA SI QUIERES
 
-    <script type="module" src="admin.js"></script>
+        document.getElementById('btn-login').addEventListener('click', () => {
+            const pass = document.getElementById('admin-pass').value;
+            if(pass === CLAVE_SECRETA) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                // Si la contraseña es correcta, cargamos el JS del panel
+                cargarLogicaFirebase();
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        });
+
+        // 2. LÓGICA FIREBASE (Se ejecuta solo si haces login)
+        function cargarLogicaFirebase() {
+            // Reutilizamos el archivo main.js que ya tiene la lógica del admin
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.src = 'main.js';
+            document.body.appendChild(script);
+        }
+    </script>
 </body>
 </html>
