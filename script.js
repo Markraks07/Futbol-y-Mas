@@ -15,6 +15,23 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+// --- LÓGICA DEL MENÚ HAMBURGUESA ---
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const navLinks = document.getElementById('nav-links');
+
+if (hamburgerBtn && navLinks) {
+    hamburgerBtn.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+    });
+    
+    // Cerrar menú al hacer clic en un enlace (ideal para móviles)
+    navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.classList.remove('active');
+        });
+    });
+}
+
 // =========================================================
 // 1. LÓGICA PÚBLICA (Para los visitantes)
 // =========================================================
@@ -206,22 +223,5 @@ if (btnPublicarNews) {
         } else {
             alert('Falta el título o la descripción.');
         }
-    });
-}
-
-// --- LÓGICA DEL MENÚ HAMBURGUESA ---
-const hamburgerBtn = document.getElementById('hamburger-btn');
-const navLinks = document.getElementById('nav-links');
-
-if (hamburgerBtn && navLinks) {
-    hamburgerBtn.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-    });
-    
-    // Cerrar menú al hacer clic en un enlace (ideal para móviles)
-    navLinks.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            navLinks.classList.remove('active');
-        });
     });
 }
