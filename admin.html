@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FYM | Panel de Administración</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+        .admin-card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        button { background: #e53e3e; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
+        input, select, textarea { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+    <h1>Panel de Control FYM</h1>
+
+    <!-- Gestión del Tema de la Web -->
+    <div class="admin-card">
+        <h2>🎨 Apariencia de la Web</h2>
+        <p>Cambia el tema visual para todos los usuarios en tiempo real.</p>
+        <button id="btn-tema-oscuro" style="background: #1a1a1a;">Tema Oscuro (Por defecto)</button>
+        <button id="btn-tema-claro" style="background: #e2e8f0; color: black;">Tema Claro (Día)</button>
+        <button id="btn-tema-match" style="background: #25D366;">Tema "Día de Partido" (Especial)</button>
+    </div>
+
+    <!-- Buscador de API de Partidos -->
+    <div class="admin-card">
+        <h2>⚽ Configurar Porra (Vía API)</h2>
+        <p>Busca los próximos partidos y publícalos en Firebase.</p>
+        <button id="btn-fetch-api">Obtener Partidos de La Liga (API)</button>
+        
+        <div id="lista-partidos-api" style="margin-top: 15px;"></div>
+    </div>
+
+    <!-- Gestión de Novedades/Noticias -->
+    <div class="admin-card">
+        <h2>📰 Añadir Novedad / Debate</h2>
+        <input type="text" id="news-cat" placeholder="Categoría (Ej: DEBATE, NOTICIA, FICHAJE)">
+        <input type="text" id="news-title" placeholder="Título del debate">
+        <textarea id="news-desc" rows="3" placeholder="Descripción o pregunta para la comunidad"></textarea>
+        <button id="btn-publicar-news">Publicar Novedad</button>
+    </div>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>

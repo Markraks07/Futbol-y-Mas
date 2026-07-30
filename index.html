@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FÚTBOL Y MÁS | FYM</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Fuente épica de Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navegación -->
+    <nav class="navbar">
+        <div class="logo">FYM</div>
+        <div class="nav-links">
+            <a href="#noticias">Noticias y Debates</a>
+            <a href="#club10">El Club de los 10</a>
+            <a href="https://whatsapp.com/channel/0029Vb6WOpE4IBhE9to6Du2U" target="_blank" class="btn-whatsapp">Únete al Canal</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>NO LEAS LAS NOTICIAS, SÉ PARTE DE ELLAS</h1>
+            <p>La comunidad 100% enfocada en fútbol. Opina, debate, vota y compite.</p>
+            <a href="https://whatsapp.com/channel/0029Vb6WOpE4IBhE9to6Du2U" target="_blank" class="btn-epic">ENTRAR AL TERRENO DE JUEGO</a>
+        </div>
+    </header>
+
+    <!-- Próximo Reto / Porra -->
+    <section class="section-reto">
+        <h2 class="section-title">La Porra de la Semana</h2>
+        <div id="partido-container" class="partido-box">
+            <p>Cargando el próximo partidazo...</p>
+        </div>
+    </section>
+
+    <!-- El Club de los 10 -->
+    <section id="club10" class="section-club">
+        <h2 class="section-title">EL CLUB DE LOS 10 SOCIOS OFICIALES 🏆</h2>
+        <p class="club-desc">Solo existirán 10 carnets en toda la historia. El #001 ya tiene dueño. Participa en la comunidad para ganar el tuyo. Intransferible. Exclusivo.</p>
+        
+        <div class="carnets-grid" id="carnets-container">
+            <!-- Los carnets se generan desde JS -->
+        </div>
+    </section>
+
+    <!-- Sección Noticias Dinámicas -->
+    <section id="noticias" class="section-news">
+        <h2 class="section-title">Últimas Noticias y Debates</h2>
+        <div class="news-grid" id="news-container">
+            <p class="loading-text">Conectando con Firebase para obtener las últimas noticias...</p>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 FÚTBOL Y MÁS | FYM. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- Importamos el JS como módulo -->
+    <script type="module" src="main.js"></script>
+</body>
+</html>
