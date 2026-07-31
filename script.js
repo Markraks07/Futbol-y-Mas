@@ -15,22 +15,27 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// --- LÓGICA DEL MENÚ HAMBURGUESA ---
-const hamburgerBtn = document.getElementById('hamburger-btn');
-const navLinks = document.getElementById('nav-links');
+// =========================================================
+// LÓGICA DEL MENÚ HAMBURGUESA (Garantizado)
+// =========================================================
+document.addEventListener('DOMContentLoaded', () => {
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const navLinks = document.getElementById('nav-links');
 
-if (hamburgerBtn && navLinks) {
-    hamburgerBtn.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-    });
-    
-    // Cerrar menú al hacer clic en un enlace (ideal para móviles)
-    navLinks.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            navLinks.classList.remove('active');
+    if (hamburgerBtn && navLinks) {
+        hamburgerBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Evita que el clic se cruce con otros elementos
+            navLinks.classList.toggle('active');
         });
-    });
-}
+        
+        // Cerrar menú al hacer clic en cualquier enlace (ideal en móvil)
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+    }
+});
 
 // =========================================================
 // 1. LÓGICA PÚBLICA (Para los visitantes)
