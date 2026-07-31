@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FÚTBOL Y MÁS | FYM</title>
+    <title>FYM | Comunidad de Fútbol</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Fuente Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     
-    <!-- Navegación con Menú Hamburguesa -->
+    <!-- Navbar -->
     <nav class="navbar">
         <div class="logo">FYM</div>
         
-        <!-- Botón Hamburguesa (Solo visible en móvil) -->
-        <button class="hamburger" id="hamburger-btn" aria-label="Abrir menú">
+        <button class="hamburger" id="hamburger-btn">
             <svg viewBox="0 0 100 80" width="30" height="30" fill="white">
                 <rect width="100" height="15" rx="8"></rect>
                 <rect y="30" width="100" height="15" rx="8"></rect>
@@ -23,80 +21,53 @@
             </svg>
         </button>
         
-        <!-- Enlaces -->
         <div class="nav-links" id="nav-links">
-            <a href="#que-es">¿Qué hacemos?</a>
-            <a href="#noticias">Noticias</a>
-            <a href="#club10">Club de los 10</a>
+            <a href="#panel-porra">Porra Actual</a>
+            <a href="#panel-debates">Debates</a>
+            <a href="#panel-vip">Club 10</a>
             <a href="admin.html" class="btn-admin">⚙️ Admin</a>
-            <a href="URL_DE_TU_WHATSAPP" target="_blank" class="btn-whatsapp">Únete al Canal</a>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <header class="hero">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1>NO LEAS LAS NOTICIAS, SÉ PARTE DE ELLAS</h1>
-            <p>La comunidad 100% enfocada en fútbol. Opina, debate, vota y compite.</p>
-            <a href="https://whatsapp.com/channel/0029Vb6WOpE4IBhE9to6Du2U" target="_blank" class="btn-epic">ENTRAR AL TERRENO DE JUEGO</a>
-        </div>
+    <!-- CABECERA CORTA Y DIRECTA -->
+    <header class="mini-hero">
+        <h1>NO LEAS LAS NOTICIAS, <span style="color: var(--accent);">DECÍDELAS</span></h1>
+        <p>Opina, vota y compite. Todo pasa en nuestro canal.</p>
+        <a href="URL_DE_TU_WHATSAPP" target="_blank" class="btn-whatsapp track-wa">ENTRAR AL CANAL DE WHATSAPP</a>
     </header>
 
-    <!-- ¿Qué es FYM? -->
-    <section id="que-es" class="section-que-es">
-        <h2 class="section-title">¿Qué hacemos en FYM?</h2>
-        <div class="features-grid">
-            <div class="feature-card">
-                <h3>🗣️ Noticias y Debates</h3>
-                <p>No solo subimos noticias diarias, lo importante es el debate. Abrimos el tema y la comunidad decide, opina y vota.</p>
-            </div>
-            <div class="feature-card">
-                <h3>📊 Encuestas</h3>
-                <p>Lanzamos encuestas semanales: "¿Quién gana la Champions?", "¿MVP?". Tú decides el contenido.</p>
-            </div>
-            <div class="feature-card">
-                <h3>🎯 Porras y Retos</h3>
-                <p>Activamos porras antes de partidos grandes. Si aciertas o eres el más activo, ganas premios.</p>
-            </div>
-            <div class="feature-card">
-                <h3>🏆 Club de los 10</h3>
-                <p>Solo 10 carnets oficiales. Se entregan a los más activos. Eres parte de la élite de la comunidad.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Próximo Reto / Porra -->
-    <section class="section-reto">
-        <h2 class="section-title">La Porra de la Semana</h2>
-        <div id="partido-container" class="partido-box">
-            <p>Cargando el próximo partidazo...</p>
-        </div>
-    </section>
-
-    <!-- El Club de los 10 -->
-    <section id="club10" class="section-club">
-        <h2 class="section-title">EL CLUB DE LOS 10 SOCIOS OFICIALES 🏆</h2>
-        <p class="club-desc">Solo existirán 10 carnets en toda la historia. El #001 ya tiene dueño. Participa en la comunidad para ganar el tuyo. Intransferible. Exclusivo.</p>
+    <div class="dashboard-publico">
         
-        <div class="carnets-grid" id="carnets-container">
-            <!-- Los carnets se generan desde JS -->
-        </div>
-    </section>
+        <!-- PANEL DE LA PORRA (Sube arriba del todo) -->
+        <section id="panel-porra" class="panel-box">
+            <h2 class="panel-title">🔥 LA PORRA DE LA SEMANA</h2>
+            <div id="partido-container" class="partido-card">
+                <p>Cargando partido...</p>
+            </div>
+            <a href="URL_DE_TU_WHATSAPP" target="_blank" class="btn-action track-wa">Dejar mi predicción en WhatsApp</a>
+        </section>
 
-    <!-- Sección Noticias Dinámicas -->
-    <section id="noticias" class="section-news">
-        <h2 class="section-title">Últimas Noticias y Debates</h2>
-        <div class="news-grid" id="news-container">
-            <p class="loading-text">Conectando con Firebase para obtener las últimas noticias...</p>
-        </div>
-    </section>
+        <!-- PANEL DE DEBATES / NOTICIAS -->
+        <section id="panel-debates" class="panel-box">
+            <h2 class="panel-title">🗣️ DEBATES ACTIVOS</h2>
+            <div class="news-grid" id="news-container">
+                <p class="loading-text">Buscando salseo...</p>
+            </div>
+        </section>
+
+        <!-- PANEL VIP -->
+        <section id="panel-vip" class="panel-box">
+            <h2 class="panel-title">🏆 CLUB DE LOS 10</h2>
+            <p style="text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 20px;">Los dueños de la comunidad. Solo 10 plazas.</p>
+            <div class="carnets-grid" id="carnets-container"></div>
+        </section>
+
+    </div>
 
     <footer>
-        <p>&copy; 2026 FÚTBOL Y MÁS | FYM. Todos los derechos reservados.</p>
+        <p>&copy; 2026 FYM. <a href="admin.html" style="color:#555;">Panel Admin</a></p>
     </footer>
 
-    <!-- Importamos el JS como módulo -->
     <script type="module" src="main.js"></script>
 </body>
 </html>
