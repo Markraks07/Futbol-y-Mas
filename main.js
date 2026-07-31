@@ -122,7 +122,7 @@ if (partidoContainer) {
     onValue(ref(db, 'partido_actual'), (snapshot) => {
         const data = snapshot.val();
         if (data && data.equipoLocal) {
-            tituloInteractivo.innerText = "🔥 LA PORRA DE LA SEMANA";
+            if(tituloInteractivo) tituloInteractivo.innerText = "🔥 LA PORRA DE LA SEMANA";
             partidoContainer.innerHTML = `
                 <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; text-transform: uppercase;">${data.competicion || 'AMISTOSO'}</div>
                 <span style="color: var(--text-main); font-size: 1.5rem; font-weight: bold;">${data.equipoLocal}</span> 
@@ -134,7 +134,7 @@ if (partidoContainer) {
             onValue(ref(db, 'cuestionario_activo'), (quizSnap) => {
                 const qData = quizSnap.val();
                 if (qData) {
-                    tituloInteractivo.innerText = "📝 CUESTIONARIO ACTIVO";
+                    if(tituloInteractivo) tituloInteractivo.innerText = "📝 CUESTIONARIO ACTIVO";
                     let opcionesHTML = '';
                     qData.opciones.forEach((opt, index) => {
                         if(opt) {
@@ -159,7 +159,7 @@ if (partidoContainer) {
                         });
                     });
                 } else {
-                    tituloInteractivo.innerText = "🔥 ZONA DE PARTICIPACIÓN";
+                    if(tituloInteractivo) tituloInteractivo.innerText = "🔥 ZONA DE PARTICIPACIÓN";
                     partidoContainer.innerHTML = `<p style="color: var(--text-muted);">No hay partidos ni encuestas activas ahora mismo.</p>`;
                 }
             });
@@ -204,6 +204,231 @@ if (newsContainer) {
                                 <button class="btn-enviar-comentario" data-id="${key}">Enviar</button>
                             </div>
                         </div>
+                    </div>
+                `;
+            });
+
+            newsContainer.querySelectorAll('.toggle-comments-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    const dropdown = document.getElementById(`dropdown-${id}`);
+                    dropdown.classList.toggle('active');
+                });
+            });
+
+            newsContainer.querySelectorAll('.btn-enviar-comentario').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    const autorInput = document.getElementById(`author-${id}`);
+                    const textoInput = document.getElementById(`text-${id}`);
+                    const autor = autorInput.value.trim();
+                    const texto = textoInput.value.trim();
+
+                    if(autor && texto) {
+                        push(ref(db, `noticias/${id}/comentarios`), { autor, texto }).then(() => {
+                            autorInput.value = '';
+                            textoInput.value = '';
+                        });
+                    } else {
+                        alert("Introduce tu nombre y un comentario.");
+                    }
+                });
+            });
+        } else {
+            newsContainer.innerHTML = `<p class="loading-text">No hay debates publicados.</p>`;
+        }
+    });
+}
+
+// 7. PANEL ADMIN & HISTORIAL DE CONTENIDO
+const btnPubAlerta = document.getElementById('btn-publicar-alerta');
+if(btnPubAlerta) {
+    btnPubAlerta.addEventListener('click', () => {
+        const texto = document.getElementById('alert-text').value;
+        const link = document.getElementById('alert-link').value;
+        if(texto) set(ref(db, 'configuracion/alerta'), { activa: true, texto, link });
+    });
+}
+
+const btnQuitAlerta = document.getElementById('btn-quitar-alerta');
+if(btnQuitAlerta) {
+    btnQuitAlerta.addEventListener('click', () => {
+        set(ref(db, 'configuracion/alerta/activa'), false);
+    });
+}
+
+const btnGuarSocio = document.getElementById('btn-guardar-socio');
+if(btnGuarSocio) {
+    btnGuarSocio.addEventListener('click', () => {
+        const num = document.getElementById('socio-num').value;
+        const nombre = document.getElementById('socio-name').value;
+        const status = document.getElementById('socio-status').value;
+        if(num >= 1 && num <= 10 && nombre) {
+            set(ref(db, 'socios/' + num), { nombre, status });
+            alert(`Socio #${num} guardado.`);
+            document.getElementById('socio-name').value = '';
+        }
+    });
+}
+
+const btnPubQuiz = document.getElementById('btn-publicar-quiz');
+if(btnPubQuiz) {
+    btnPubQuiz.addEventListener('click', () => {
+        const pregunta = document.getElementById('quiz-question').value;
+        const opt1 = document.getElementById('quiz-opt1').value;
+        const opt2 = document.getElementById('quiz-opt2').value;
+        const opt3 = document.getElementById('quiz-opt3').value;
+        const opt4 = document.getElementById('quiz-opt4').value;
+
+        if(pregunta && opt1 && opt2) {
+            const quizData = { pregunta, opciones: [opt1, opt2, opt3, opt4].filter(o => o !== "") };
+            set(ref(db, 'cuestionario_activo'), quizData);
+            push(ref(db, 'historial_encuestas'), quizData);
+            set(ref(db, 'partido_actual'), null);
+            alert("¡Cuestionario lanzado y guardado en el historial!");
+            document.getElementById('quiz-question').value = '';
+            document.getElementById('quiz-opt1').value = '';
+            document.getElementById('quiz-opt2').value = '';
+            document.getElementById('quiz-opt3').value = '';
+            document.getElementById('quiz-opt4').value = '';
+        } else {
+            alert("Rellena la pregunta y al menos 2 opciones.");
+        }
+    });
+}
+
+const btnPubNews = document.getElementById('btn-publicar-news');
+if(btnPubNews) {
+    btnPubNews.addEventListener('click', () => {
+        const titulo = document.getElementById('news-title').value;
+        const resumen = document.getElementById('news-desc').value;
+        const categoria = document.getElementById('news-cat').value || 'DEBATE';
+        if(titulo && resumen) {
+            const noticiaData = { categoria, titulo, resumen };
+            push(ref(db, 'noticias'), noticiaData).then(() => { 
+                alert("¡Debate publicado con éxito!");
+                document.getElementById('news-title').value = '';
+                document.getElementById('news-desc').value = '';
+            });
+        }
+    });
+}
+
+const historialEncuestasDiv = document.getElementById('historial-encuestas');
+const historialDebatesDiv = document.getElementById('historial-debates');
+
+if (historialEncuestasDiv && historialDebatesDiv) {
+    onValue(ref(db, 'historial_encuestas'), (snapshot) => {
+        historialEncuestasDiv.innerHTML = '';
+        const data = snapshot.val();
+        if(data) {
+            Object.keys(data).forEach(key => {
+                const enc = data[key];
+                historialEncuestasDiv.innerHTML += `
+                    <div class="history-item">
+                        <span><strong>${enc.pregunta}</strong></span>
+                        <div class="history-actions">
+                            <button style="background:#2b6cb0;" onclick="window.reusarEncuesta('${key}')">Reutilizar</button>
+                            <button style="background:#e53e3e;" onclick="window.borrarHistorial('historial_encuestas', '${key}')">Borrar</button>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            historialEncuestasDiv.innerHTML = '<p style="color:#666; font-size:0.85rem;">No hay encuestas en el historial.</p>';
+        }
+    });
+
+    onValue(ref(db, 'noticias'), (snapshot) => {
+        historialDebatesDiv.innerHTML = '';
+        const data = snapshot.val();
+        if(data) {
+            Object.keys(data).forEach(key => {
+                const deb = data[key];
+                historialDebatesDiv.innerHTML += `
+                    <div class="history-item">
+                        <span>[${deb.categoria}] <strong>${deb.titulo}</strong></span>
+                        <div class="history-actions">
+                            <button style="background:#e53e3e;" onclick="window.borrarHistorial('noticias', '${key}')">Quitar de Web</button>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            historialDebatesDiv.innerHTML = '<p style="color:#666; font-size:0.85rem;">No hay debates activos o en historial.</p>';
+        }
+    });
+}
+
+window.reusarEncuesta = (key) => {
+    get(ref(db, `historial_encuestas/${key}`)).then(snap => {
+        if(snap.exists()) {
+            set(ref(db, 'cuestionario_activo'), snap.val());
+            set(ref(db, 'partido_actual'), null);
+            alert("¡Encuesta restaurada y activa en la web!");
+        }
+    });
+};
+
+window.borrarHistorial = (path, key) => {
+    if(confirm("¿Seguro que quieres eliminar este elemento?")) {
+        remove(ref(db, `${path}/${key}`)).then(() => {
+            alert("Eliminado correctamente.");
+        });
+    }
+};
+
+const statsCard = document.getElementById('admin-visitas');
+if (statsCard) {
+    onValue(ref(db, 'estadisticas'), (snapshot) => {
+        const stats = snapshot.val() || {};
+        document.getElementById('admin-visitas').innerText = stats.visitas || 0;
+        document.getElementById('admin-clicks').innerText = stats.clicks || 0;
+        let conv = stats.visitas > 0 ? ((stats.clicks / stats.visitas) * 100).toFixed(1) : 0;
+        document.getElementById('calc-conversion').innerHTML = `<strong>Conversión:</strong> ${conv}% tocan el botón WA.`;
+    });
+    document.getElementById('btn-guardar-seguidores').addEventListener('click', () => {
+        const s = document.getElementById('input-seguidores').value;
+        if(s) set(ref(db, 'estadisticas/seguidores'), Number(s));
+    });
+}
+
+const changeTheme = (themeName, isAuto) => {
+    set(ref(db, 'configuracion/tema_actual'), themeName);
+    set(ref(db, 'configuracion/tema_auto'), isAuto);
+};
+document.getElementById('btn-tema-oscuro')?.addEventListener('click', () => changeTheme('dark', false));
+document.getElementById('btn-tema-claro')?.addEventListener('click', () => changeTheme('light', false));
+document.getElementById('btn-tema-match')?.addEventListener('click', () => changeTheme('matchday', false));
+document.getElementById('btn-tema-champions')?.addEventListener('click', () => changeTheme('champions', false));
+document.getElementById('btn-tema-mundial')?.addEventListener('click', () => changeTheme('mundial', false));
+document.getElementById('btn-tema-auto')?.addEventListener('click', () => {
+    alert("Modo Automático activado.");
+    get(ref(db, 'partido_actual')).then(snap => {
+        const data = snap.val();
+        if(data && data.competicion) checkAndSetAutoTheme(data.competicion);
+    });
+});
+
+function checkAndSetAutoTheme(competicionNombre) {
+    set(ref(db, 'configuracion/tema_auto'), true);
+    const comp = competicionNombre.toLowerCase();
+    let newTheme = 'matchday';
+    if (comp.includes('champions') || comp.includes('uefa')) {
+        newTheme = 'champions';
+    } else if (comp.includes('world cup') || comp.includes('mundial') || comp.includes('euro')) {
+        newTheme = 'mundial';
+    }
+    set(ref(db, 'configuracion/tema_actual'), newTheme);
+}
+
+const btnFetchApi = document.getElementById('btn-fetch-api');
+if (btnFetchApi) {
+    btnFetchApi.addEventListener('click', async () => {
+        const contenedor = document.getElementById('lista-partidos-api');
+        contenedor.innerHTML = "Cargando...";
+        try {
+            const resp = await fetch('https://v3.football.api             </div>
                     </div>
                 `;
             });
