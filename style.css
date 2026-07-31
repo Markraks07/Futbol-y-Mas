@@ -102,6 +102,37 @@ h1, h2, h3, .logo { font-family: 'Oswald', sans-serif; text-transform: uppercase
 .comment-form button { padding: 8px 15px; font-size: 0.85rem; }
 
 /* =========================================
+   ESTILOS PARA COMENTARIOS DESPLEGABLES
+   ========================================= */
+.toggle-comments-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin: 10px 0 5px 0;
+    text-decoration: underline;
+    display: inline-block;
+    padding: 0;
+}
+.toggle-comments-btn:hover { color: var(--text-main); background: transparent; }
+
+.comments-dropdown {
+    display: none;
+    margin-top: 10px;
+    border-top: 1px dashed var(--card-border);
+    padding-top: 10px;
+}
+.comments-dropdown.active { display: block; }
+.comments-list { max-height: 180px; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+.comment-item { background: var(--panel-bg); padding: 6px 10px; border-radius: 4px; font-size: 0.85rem; border-left: 2px solid var(--accent); }
+.comment-item strong { color: var(--accent); display: block; font-size: 0.75rem; }
+.comment-form { display: flex; gap: 6px; margin-top: 8px; }
+.comment-form input { margin: 0 !important; font-size: 0.8rem; padding: 6px; }
+.comment-form button { padding: 6px 12px; font-size: 0.8rem; }
+
+/* =========================================
    FOOTER
    ========================================= */
 footer { text-align: center; padding: 2rem; background: var(--nav-bg); color: var(--text-muted); border-top: 1px solid var(--card-border); transition: background-color 0.4s ease; }
