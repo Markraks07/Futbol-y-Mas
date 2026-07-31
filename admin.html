@@ -6,7 +6,7 @@
     <title>FYM | Dashboard Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0a0a0a; --panel: #111; --accent: #e53e3e; --text: #fff; }
+        :root { --bg: #0a0a0a; --panel: #111; --accent: #e53e3e; --text: #fff; --gold: #ecc94b;}
         body { margin: 0; font-family: 'Roboto', sans-serif; background: var(--bg); color: var(--text); }
         h1, h2 { font-family: 'Oswald', sans-serif; text-transform: uppercase; }
         
@@ -17,16 +17,16 @@
             justify-content: center; align-items: center; z-index: 1000;
         }
         .login-box { background: var(--panel); padding: 3rem; border-radius: 8px; border: 1px solid #333; text-align: center; }
-        .login-box input { padding: 10px; width: 100%; margin: 15px 0; background: #222; border: 1px solid #444; color: white; }
-        .login-box button { background: var(--accent); color: white; padding: 10px 20px; border: none; cursor: pointer; width: 100%; font-weight: bold; }
+        .login-box input { padding: 10px; width: 100%; margin: 15px 0; background: #222; border: 1px solid #444; color: white; border-radius: 4px; }
+        .login-box button { background: var(--accent); color: white; padding: 12px; border: none; cursor: pointer; width: 100%; font-weight: bold; border-radius: 4px; }
         .error-msg { color: var(--accent); display: none; margin-top: 10px; font-size: 0.9rem; }
 
-        /* DASHBOARD PRINCIPAL (Oculto por defecto) */
+        /* DASHBOARD PRINCIPAL */
         #dashboard { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem; }
         .header a { color: #888; text-decoration: none; }
         
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; }
         .card { background: var(--panel); padding: 2rem; border-radius: 8px; border: 1px solid #222; }
         .card h2 { color: var(--accent); margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
         
@@ -36,23 +36,31 @@
         
         .btn-theme { width: 100%; margin-bottom: 10px; background: #333; }
         .btn-theme:hover { background: #555; }
+
+        /* ESTILOS ESTADÍSTICAS */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .stat-box { background: #222; padding: 15px; border-radius: 6px; text-align: center; }
+        .stat-box.highlight { border: 1px solid var(--accent); }
+        .stat-box span { display: block; font-size: 2rem; font-weight: bold; color: var(--gold); }
+        .stat-box p { margin: 0; font-size: 0.8rem; color: #aaa; text-transform: uppercase; }
+        .math-result { background: #1a1a1a; padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 0.9rem; color: #ccc; border-left: 3px solid var(--accent); }
     </style>
 </head>
 <body>
 
-    <!-- Pantalla de Seguridad -->
+    <!-- Pantalla de Login -->
     <div id="login-screen">
         <div class="login-box">
             <h1 style="color: var(--accent);">ÁREA RESTRINGIDA</h1>
-            <p>Introduce la contraseña de administrador</p>
+            <p>Introduce la contraseña</p>
             <input type="password" id="admin-pass" placeholder="Contraseña">
             <button id="btn-login">ACCEDER</button>
             <p class="error-msg" id="error-msg">Contraseña incorrecta.</p>
-            <a href="index.html" style="color: #666; display: block; margin-top: 20px; font-size: 0.8rem; text-decoration: none;">&larr; Volver a la web</a>
+            <a href="index.html" style="color: #666; display: block; margin-top: 20px; font-size: 0.8rem;">&larr; Volver a la web</a>
         </div>
     </div>
 
-    <!-- Contenido del Panel Admin -->
+    <!-- Panel de Control -->
     <div id="dashboard">
         <div class="header">
             <h1>Panel de Control <span style="color: var(--accent);">FYM</span></h1>
@@ -60,59 +68,77 @@
         </div>
 
         <div class="grid">
+            
+            <!-- ESTADÍSTICAS Y CÁLCULOS -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>📊 Estadísticas de la Comunidad</h2>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span id="admin-visitas">0</span>
+                        <p>Visitas a la Web</p>
+                    </div>
+                    <div class="stat-box">
+                        <span id="admin-clicks">0</span>
+                        <p>Clics a WhatsApp</p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 15px;">
+                    <label style="color: var(--accent); font-weight: bold;">¿Cuántos seguidores hay en el canal ahora mismo?</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="number" id="input-seguidores" placeholder="Ej: 1500" style="margin: 0;">
+                        <button id="btn-guardar-seguidores" style="width: auto;">Actualizar</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <div class="math-result" id="calc-conversion"><strong>Conversión de Clics:</strong> Esperando datos...</div>
+                    <div class="math-result" id="calc-efectividad"><strong>Efectividad Real:</strong> Esperando datos...</div>
+                </div>
+            </div>
+
             <!-- Gestión del Tema -->
             <div class="card">
-                <h2>🎨 Apariencia Global</h2>
-                <p style="font-size: 0.9rem; color: #888;">Cambia el diseño de la web en tiempo real para todos.</p>
-                <button class="btn-theme" id="btn-tema-oscuro" style="border-left: 5px solid #000;">Modo Oscuro (Normal)</button>
-                <button class="btn-theme" id="btn-tema-claro" style="border-left: 5px solid #fff; color: #000; background: #ccc;">Modo Claro (Día)</button>
+                <h2>🎨 Apariencia</h2>
+                <button class="btn-theme" id="btn-tema-oscuro" style="border-left: 5px solid #000;">Modo Oscuro</button>
+                <button class="btn-theme" id="btn-tema-claro" style="border-left: 5px solid #fff; color: #000; background: #ccc;">Modo Claro</button>
                 <button class="btn-theme" id="btn-tema-match" style="border-left: 5px solid #ffcc00;">Modo "Día de Partido"</button>
             </div>
 
             <!-- Publicar Noticias -->
             <div class="card">
-                <h2>📰 Lanzar Novedad</h2>
-                <input type="text" id="news-cat" placeholder="Categoría (Ej: DEBATE, ÚLTIMA HORA)">
-                <input type="text" id="news-title" placeholder="Título impactante">
-                <textarea id="news-desc" rows="4" placeholder="Desarrolla el tema para que la comunidad debata..."></textarea>
+                <h2>📰 Lanzar Novedad / Debate</h2>
+                <input type="text" id="news-cat" placeholder="Categoría (Ej: DEBATE, FICHAJE)">
+                <input type="text" id="news-title" placeholder="Título para picar a la gente">
+                <textarea id="news-desc" rows="4" placeholder="Escribe aquí de qué va el tema..."></textarea>
                 <button id="btn-publicar-news" style="width: 100%;">PUBLICAR EN LA WEB</button>
             </div>
 
             <!-- Porras / Partidos -->
             <div class="card">
-                <h2>⚽ Configurar Porra (API)</h2>
-                <p style="font-size: 0.9rem; color: #888;">Busca los próximos partidos y selecciona uno.</p>
-                <button id="btn-fetch-api" style="width: 100%; background: #25D366;">Buscar en la API</button>
+                <h2>⚽ Configurar Porra</h2>
+                <button id="btn-fetch-api" style="width: 100%; background: #25D366;">Buscar partidos en la API</button>
                 <div id="lista-partidos-api" style="margin-top: 15px; max-height: 250px; overflow-y: auto;"></div>
             </div>
         </div>
     </div>
 
-    <!-- Script de Protección por Contraseña y Lógica Admin -->
     <script type="module">
-        // 1. SISTEMA DE LOGIN SENCILLO
-        const CLAVE_SECRETA = "FYM2026"; // <-- CAMBIA ESTA CONTRASEÑA SI QUIERES
+        const CLAVE_SECRETA = "FYM2026"; 
 
         document.getElementById('btn-login').addEventListener('click', () => {
             const pass = document.getElementById('admin-pass').value;
             if(pass === CLAVE_SECRETA) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'block';
-                // Si la contraseña es correcta, cargamos el JS del panel
-                cargarLogicaFirebase();
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.src = 'main.js';
+                document.body.appendChild(script);
             } else {
                 document.getElementById('error-msg').style.display = 'block';
             }
         });
-
-        // 2. LÓGICA FIREBASE (Se ejecuta solo si haces login)
-        function cargarLogicaFirebase() {
-            // Reutilizamos el archivo main.js que ya tiene la lógica del admin
-            const script = document.createElement('script');
-            script.type = 'module';
-            script.src = 'main.js';
-            document.body.appendChild(script);
-        }
     </script>
 </body>
 </html>
