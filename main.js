@@ -51,8 +51,7 @@ if(alertBanner) {
     });
 }
 
-// 3. CARGA DE DATOS PÚBLICOS
-// A) Carnets VIP (Socios reales desde Firebase)
+// 3. CARNAVAL DE SOCIOS VIP
 const carnetsContainer = document.getElementById('carnets-container');
 if (carnetsContainer) {
     onValue(ref(db, 'socios'), (snapshot) => {
@@ -71,12 +70,11 @@ if (carnetsContainer) {
     });
 }
 
-// B) Motor de Temas y Auto-Tema
+// 4. MOTOR DE TEMAS
 onValue(ref(db, 'configuracion/tema_actual'), (snapshot) => {
     const tema = snapshot.val() || 'dark';
     const root = document.documentElement;
     
-    // Resetear a modo oscuro siempre primero
     root.style.setProperty('--bg-color', '#0a0a0a');
     root.style.setProperty('--text-main', '#ffffff');
     root.style.setProperty('--text-muted', '#a0aec0');
@@ -117,23 +115,61 @@ onValue(ref(db, 'configuracion/tema_actual'), (snapshot) => {
     }
 });
 
-// C) Partido Actual
+// 5. ZONA INTERACTIVA (PARTIDOS O CUESTIONARIOS)
 const partidoContainer = document.getElementById('partido-container');
+const tituloInteractivo = document.getElementById('panel-interactivo-titulo');
 if (partidoContainer) {
     onValue(ref(db, 'partido_actual'), (snapshot) => {
         const data = snapshot.val();
-        if (data) {
+        if (data && data.equipoLocal) {
+            tituloInteractivo.innerText = "🔥 LA PORRA DE LA SEMANA";
             partidoContainer.innerHTML = `
                 <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; text-transform: uppercase;">${data.competicion || 'AMISTOSO'}</div>
                 <span style="color: var(--text-main); font-size: 1.5rem; font-weight: bold;">${data.equipoLocal}</span> 
                 <span style="color: var(--accent); margin: 0 10px; font-size: 1.5rem;">VS</span> 
                 <span style="color: var(--text-main); font-size: 1.5rem; font-weight: bold;">${data.equipoVisitante}</span>
+                <a href="URL_DE_TU_WHATSAPP" target="_blank" class="btn-action track-wa" style="margin-top:20px;">Dejar mi predicción en WhatsApp</a>
             `;
+        } else {
+            // Si no hay partido, buscamos si hay un cuestionario activo
+            onValue(ref(db, 'cuestionario_activo'), (quizSnap) => {
+                const qData = quizSnap.val();
+                if (qData) {
+                    tituloInteractivo.innerText = "📝 CUESTIONARIO ACTIVO";
+                    let opcionesHTML = '';
+                    qData.opciones.forEach((opt, index) => {
+                        if(opt) {
+                            opcionesHTML += `<button class="btn-quiz-option" data-index="${index}">${opt}</button>`;
+                        }
+                    });
+                    partidoContainer.innerHTML = `
+                        <h3 style="font-size: 1.3rem; margin-bottom: 15px; color: var(--text-main);">${qData.pregunta}</h3>
+                        <div class="quiz-options">${opcionesHTML}</div>
+                        <div id="quiz-resultado" style="margin-top: 15px; font-size: 0.9rem; color: var(--gold);"></div>
+                    `;
+
+                    // Evento al votar
+                    partidoContainer.querySelectorAll('.btn-quiz-option').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const idx = e.currentTarget.getAttribute('data-index');
+                            const votoRef = ref(db, `cuestionario_activo/votos/${idx}`);
+                            get(votoRef).then(vSnap => {
+                                const actuales = vSnap.val() || 0;
+                                set(votoRef, actuales + 1);
+                                document.getElementById('quiz-resultado').innerText = "¡Voto registrado con éxito! Gracias por participar.";
+                            });
+                        });
+                    });
+                } else {
+                    tituloInteractivo.innerText = "🔥 ZONA DE PARTICIPACIÓN";
+                    partidoContainer.innerHTML = `<p style="color: var(--text-muted);">No hay partidos ni encuestas activas ahora mismo. ¡Vuelve pronto!</p>`;
+                }
+            });
         }
     });
 }
 
-// D) Noticias
+// 6. DEBATES Y COMENTARIOS EN TIEMPO REAL
 const newsContainer = document.getElementById('news-container');
 if (newsContainer) {
     onValue(ref(db, 'noticias'), (snapshot) => {
@@ -142,20 +178,61 @@ if (newsContainer) {
             newsContainer.innerHTML = '';
             Object.keys(data).reverse().forEach((key) => {
                 const n = data[key];
+                
+                // Renderizar comentarios de esta noticia
+                let comentariosHTML = '';
+                if(n.comentarios) {
+                    Object.values(n.comentarios).forEach(c => {
+                        comentariosHTML += `<div class="comment-item"><strong>${c.autor}</strong> ${c.texto}</div>`;
+                    });
+                } else {
+                    comentariosHTML = `<div style="font-size: 0.8rem; color: var(--text-muted);">Sé el primero en opinar en este debate.</div>`;
+                }
+
                 newsContainer.innerHTML += `
-                    <div class="news-card">
+                    <div class="news-card" data-id="${key}">
                         <span class="news-cat">${n.categoria}</span>
                         <h3>${n.titulo}</h3>
                         <p>${n.resumen}</p>
-                        <a href="URL_DE_TU_WHATSAPP" target="_blank" class="btn-action track-wa">Opinar en el grupo</a>
+                        
+                        <div class="comments-section">
+                            <div class="comments-list" id="comments-${key}">${comentariosHTML}</div>
+                            <div class="comment-form">
+                                <input type="text" id="author-${key}" placeholder="Tu nombre" style="width: 35%;">
+                                <input type="text" id="text-${key}" placeholder="Escribe tu opinión..." style="width: 65%;">
+                                <button class="btn-enviar-comentario" data-id="${key}">Opinar</button>
+                            </div>
+                        </div>
                     </div>
                 `;
             });
+
+            // Activar botones de comentar
+            newsContainer.querySelectorAll('.btn-enviar-comentario').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    const autorInput = document.getElementById(`author-${id}`);
+                    const textoInput = document.getElementById(`text-${id}`);
+                    const autor = autorInput.value.trim();
+                    const texto = textoInput.value.trim();
+
+                    if(autor && texto) {
+                        push(ref(db, `noticias/${id}/comentarios`), { autor, texto }).then(() => {
+                            autorInput.value = '';
+                            textoInput.value = '';
+                        });
+                    } else {
+                        alert("Por favor, introduce tu nombre y un comentario.");
+                    }
+                });
+            });
+        } else {
+            newsContainer.innerHTML = `<p class="loading-text">No hay debates publicados todavía.</p>`;
         }
     });
 }
 
-// 4. LÓGICA EXCLUSIVA DEL ADMIN
+// 7. FUNCIONES EXCLUSIVAS DEL ADMIN
 // Alertas
 document.getElementById('btn-publicar-alerta')?.addEventListener('click', () => {
     const texto = document.getElementById('alert-text').value;
@@ -178,6 +255,27 @@ document.getElementById('btn-guardar-socio')?.addEventListener('click', () => {
     }
 });
 
+// Crear Cuestionario
+document.getElementById('btn-publicar-quiz')?.addEventListener('click', () => {
+    const pregunta = document.getElementById('quiz-question').value;
+    const opt1 = document.getElementById('quiz-opt1').value;
+    const opt2 = document.getElementById('quiz-opt2').value;
+    const opt3 = document.getElementById('quiz-opt3').value;
+    const opt4 = document.getElementById('quiz-opt4').value;
+
+    if(pregunta && opt1 && opt2) {
+        set(ref(db, 'cuestionario_activo'), {
+            pregunta,
+            opciones: [opt1, opt2, opt3, opt4].filter(o => o !== "")
+        });
+        // Borramos el partido actual para que el cuestionario tome protagonismo
+        set(ref(db, 'partido_actual'), null);
+        alert("¡Cuestionario lanzado con éxito en la web!");
+    } else {
+        alert("Debes rellenar al menos la pregunta y dos opciones.");
+    }
+});
+
 // Calculadora
 const statsCard = document.getElementById('admin-visitas');
 if (statsCard) {
@@ -194,7 +292,7 @@ if (statsCard) {
     });
 }
 
-// Lógica de Temas (Botones)
+// Temas
 const changeTheme = (themeName, isAuto) => {
     set(ref(db, 'configuracion/tema_actual'), themeName);
     set(ref(db, 'configuracion/tema_auto'), isAuto);
@@ -205,30 +303,26 @@ document.getElementById('btn-tema-match')?.addEventListener('click', () => chang
 document.getElementById('btn-tema-champions')?.addEventListener('click', () => changeTheme('champions', false));
 document.getElementById('btn-tema-mundial')?.addEventListener('click', () => changeTheme('mundial', false));
 document.getElementById('btn-tema-auto')?.addEventListener('click', () => {
-    alert("Modo Automático activado. Se elegirá el tema en base al partido de la API.");
-    // Chequear al instante
+    alert("Modo Automático activado.");
     get(ref(db, 'partido_actual')).then(snap => {
         const data = snap.val();
         if(data && data.competicion) checkAndSetAutoTheme(data.competicion);
     });
 });
 
-// Función central para leer qué competición es y asignar tema
 function checkAndSetAutoTheme(competicionNombre) {
     set(ref(db, 'configuracion/tema_auto'), true);
     const comp = competicionNombre.toLowerCase();
-    let newTheme = 'matchday'; // por defecto si hay partido
-    
+    let newTheme = 'matchday';
     if (comp.includes('champions') || comp.includes('uefa')) {
         newTheme = 'champions';
     } else if (comp.includes('world cup') || comp.includes('mundial') || comp.includes('euro')) {
         newTheme = 'mundial';
     }
-    
     set(ref(db, 'configuracion/tema_actual'), newTheme);
 }
 
-// API y seteo de partido
+// API y seteo de partido (Limpia el cuestionario si pones partido)
 const btnFetchApi = document.getElementById('btn-fetch-api');
 if (btnFetchApi) {
     btnFetchApi.addEventListener('click', async () => {
@@ -256,13 +350,14 @@ if (btnFetchApi) {
                         equipoVisitante: e.currentTarget.getAttribute('data-v'),
                         competicion: compNombre
                     });
+                    // Borramos el cuestionario para dar paso al partido
+                    set(ref(db, 'cuestionario_activo'), null);
                     
-                    // Si el auto-tema está activado, comprobamos la competición
                     get(ref(db, 'configuracion/tema_auto')).then(snap => {
                         if(snap.val() === true) checkAndSetAutoTheme(compNombre);
                     });
                     
-                    alert("Porra y partido actualizado en la web.");
+                    alert("Partido fijado y actualizado en la web.");
                 });
             });
         } catch (e) { contenedor.innerHTML = "Error al conectar con la API."; }
@@ -274,10 +369,10 @@ document.getElementById('btn-publicar-news')?.addEventListener('click', () => {
     const d = document.getElementById('news-desc').value;
     if(t && d) {
         push(ref(db, 'noticias'), {
-            categoria: document.getElementById('news-cat').value || 'NOVEDAD',
+            categoria: document.getElementById('news-cat').value || 'DEBATE',
             titulo: t, resumen: d
         }).then(() => { 
-            alert("Noticia publicada!");
+            alert("Debate publicado!");
             document.getElementById('news-title').value = '';
             document.getElementById('news-desc').value = '';
         });
