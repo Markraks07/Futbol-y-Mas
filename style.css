@@ -1,4 +1,6 @@
-/* Variables y Reset */
+/* =========================================
+   VARIABLES Y RESET GLOBAL
+   ========================================= */
 :root {
     --bg-color: #0a0a0a;
     --text-main: #ffffff;
@@ -26,6 +28,19 @@ h1, h2, h3, .logo {
     text-transform: uppercase;
 }
 
+/* =========================================
+   NAVBAR & NAVEGACIÓN
+   ========================================= */
+.navbar {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #0a0a0a;
+    z-index: 1000;
+}
+
 .logo {
     font-size: 2rem;
     font-weight: 700;
@@ -33,14 +48,9 @@ h1, h2, h3, .logo {
     letter-spacing: 2px;
 }
 
-.navbar {
-    position: relative; /* Imprescindible para posicionar el desplegable */
+.nav-links {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 1rem 2rem;
-    background-color: #0a0a0a;
-    z-index: 1000; /* Asegura que la barra esté por encima de todo */
 }
 
 .nav-links a {
@@ -55,6 +65,11 @@ h1, h2, h3, .logo {
     color: var(--accent);
 }
 
+.btn-admin {
+    color: #888 !important;
+    font-size: 0.9rem;
+}
+
 .btn-whatsapp {
     background: #25D366;
     padding: 0.5rem 1rem;
@@ -62,7 +77,23 @@ h1, h2, h3, .logo {
     color: #fff !important;
 }
 
-/* Hero Section */
+.hamburger {
+    display: none; /* Oculto en ordenador */
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    outline: none;
+}
+
+.hamburger svg {
+    pointer-events: none;
+    display: block;
+}
+
+/* =========================================
+   HERO SECTION
+   ========================================= */
 .hero {
     position: relative;
     height: 100vh;
@@ -120,7 +151,9 @@ h1, h2, h3, .logo {
     background: var(--accent-hover);
 }
 
-/* Secciones Comunes */
+/* =========================================
+   SECCIONES Y CONTENIDO
+   ========================================= */
 .section-title {
     text-align: center;
     font-size: 2.5rem;
@@ -128,10 +161,40 @@ h1, h2, h3, .logo {
     color: var(--accent);
 }
 
-.section-reto, .section-club, .section-news {
+.section-que-es, .section-reto, .section-club, .section-news {
     padding: 5rem 2rem;
     max-width: 1200px;
     margin: 0 auto;
+}
+
+/* ¿Qué es FYM? */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.feature-card {
+    background: #111;
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid #333;
+    transition: border-color 0.3s;
+}
+
+.feature-card:hover {
+    border-color: var(--accent);
+}
+
+.feature-card h3 {
+    color: var(--text-main);
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.feature-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
 }
 
 /* Reto / Porra */
@@ -140,6 +203,7 @@ h1, h2, h3, .logo {
     border-top: 1px solid #333;
     border-bottom: 1px solid #333;
 }
+
 .partido-box {
     text-align: center;
     font-size: 2rem;
@@ -243,59 +307,6 @@ footer {
     color: #555;
 }
 
-/* --- NUEVA SECCIÓN: QUÉ ES FYM --- */
-.section-que-es {
-    padding: 5rem 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-    background: #0a0a0a;
-}
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-}
-.feature-card {
-    background: #111;
-    padding: 2rem;
-    border-radius: 8px;
-    border: 1px solid #333;
-    transition: border-color 0.3s;
-}
-.feature-card:hover {
-    border-color: var(--accent);
-}
-.feature-card h3 {
-    color: var(--text-main);
-    margin-bottom: 1rem;
-    font-size: 1.3rem;
-}
-.feature-card p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-}
-
-/* --- ADAPTACIÓN MÓVIL Y MENÚ HAMBURGUESA --- */
-.hamburger {
-    display: none; /* Oculto en ordenador */
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    outline: none;
-}
-
-/* Permite que el clic traspase el SVG y lo detecte el botón siempre */
-.hamburger svg {
-    pointer-events: none;
-    display: block;
-}
-
-.btn-admin {
-    color: #888 !important;
-    font-size: 0.9rem;
-}
-
 /* =========================================
    ADAPTACIÓN PARA TABLETS (Hasta 1024px)
    ========================================= */
@@ -304,7 +315,6 @@ footer {
     .hero-content p { font-size: 1.1rem; }
     .section-title { font-size: 2.2rem; }
     
-    /* Pasamos las cuadrículas a 2 columnas en tablet */
     .carnets-grid { grid-template-columns: repeat(2, 1fr); }
     .features-grid { grid-template-columns: repeat(2, 1fr); }
 }
@@ -313,23 +323,30 @@ footer {
    ADAPTACIÓN PARA MÓVILES (Hasta 768px)
    ========================================= */
 @media (max-width: 768px) {
-    .hamburger {
-        display: block; /* Mostrar botón en móvil */
+    .navbar {
+        padding: 1rem 1.5rem;
     }
 
+    .logo {
+        font-size: 1.5rem;
+    }
+
+    .hamburger {
+        display: block; /* Muestra el botón hamburguesa */
+        z-index: 1001;
+    }
+
+    /* Menú flotante desplegable */
     .nav-links {
         position: absolute;
-        top: 100%; /* Justo debajo del navbar */
+        top: 100%;
         left: 0;
         width: 100%;
         background-color: #0a0a0a;
-        
-        /* Flexbox obligatorio para colocar en columna */
-        display: flex;
         flex-direction: column;
         align-items: center;
         
-        /* Oculto por defecto con animación suave */
+        /* Oculto con animación */
         max-height: 0;
         overflow: hidden;
         opacity: 0;
@@ -337,16 +354,16 @@ footer {
         transition: max-height 0.4s ease, opacity 0.3s ease, visibility 0.3s ease, padding 0.3s ease;
         
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
-        z-index: 999; /* Por encima de la sección Hero */
+        z-index: 999;
     }
 
-    /* ESTADO ACTIVO (Al pulsar el botón) */
+    /* Estado activo activado vía JS */
     .nav-links.active {
-        max-height: 450px; /* Altura de despliegue */
+        max-height: 450px;
         opacity: 1;
         visibility: visible;
         padding: 1.5rem 0;
-        border-bottom: 2px solid var(--accent, #e53e3e);
+        border-bottom: 2px solid var(--accent);
     }
 
     .nav-links a {
@@ -360,23 +377,17 @@ footer {
         width: 80%;
         margin-top: 10px;
     }
-    
-    /* FIX: El fondo épico en móviles */
+
+    /* Corrección del fondo fijo en móviles */
     .hero {
-        background-attachment: scroll; /* Esto arregla el bug del fondo roto en móviles */
+        background-attachment: scroll;
         background-position: center top; 
     }
 
     .hero-content h1 { font-size: 2.2rem; margin-bottom: 1rem; }
     .hero-content p { font-size: 0.95rem; }
-    
-    .navbar { padding: 1rem 1.5rem; }
-    .logo { font-size: 1.5rem; }
-    
-    /* Mostrar botón hamburguesa y asegurar que quede arriba */
-    
 
-    /* Todo a 1 columna en móvil */
+    /* Ajuste a 1 sola columna */
     .carnets-grid { grid-template-columns: 1fr; }
     .features-grid { grid-template-columns: 1fr; }
     .news-grid { grid-template-columns: 1fr; }
