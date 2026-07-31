@@ -1,1 +1,146 @@
-<html><head><meta content="text/html; charset=UTF-8" http-equiv="content-type"></head><body class="doc-content" style="background-color:#ffffff;max-width:468pt;padding:72pt 72pt 72pt 72pt"><p style="padding-top:0pt;margin:0;color:#000000;padding-left:0;font-size:11pt;padding-bottom:12pt;font-family:&quot;Arial&quot;;line-height:1.0;text-align:left;padding-right:0"><span style="font-weight:400;font-family:&quot;Courier&quot;">&lt;!DOCTYPE html&gt;<br>&lt;html lang=&quot;es&quot;&gt;<br>&lt;head&gt;<br> &nbsp; &nbsp;&lt;meta charset=&quot;UTF-8&quot;&gt;<br> &nbsp; &nbsp;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;<br> &nbsp; &nbsp;&lt;title&gt;Panel de Administraci&oacute;n | Fuego en la Isla&lt;/title&gt;<br> &nbsp; &nbsp;&lt;!-- Enlaza tus estilos CSS aqu&iacute; --&gt;<br> &nbsp; &nbsp;&lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot;&gt;<br>&lt;/head&gt;<br>&lt;body&gt;<br><br> &nbsp; &nbsp;&lt;header class=&quot;admin-header&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;h1&gt;&#128293; Panel de Control - Admin&lt;/h1&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;p&gt;Gestiona contenidos, encuestas, estad&iacute;sticas y configuraci&oacute;n de la web.&lt;/p&gt;<br> &nbsp; &nbsp;&lt;/header&gt;<br><br> &nbsp; &nbsp;&lt;!-- MEN&Uacute; DE NAVEGACI&Oacute;N DEL ADMIN --&gt;<br> &nbsp; &nbsp;&lt;nav class=&quot;admin-nav-menu&quot; style=&quot;display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;button class=&quot;admin-nav-btn active&quot; data-target=&quot;sec-panel&quot; style=&quot;padding: 10px 15px; cursor: pointer;&quot;&gt;&#128202; Panel &amp; Estad&iacute;sticas&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;button class=&quot;admin-nav-btn&quot; data-target=&quot;sec-contenido&quot; style=&quot;padding: 10px 15px; cursor: pointer;&quot;&gt;&#9997;&#65039; Contenido &amp; Debates&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;button class=&quot;admin-nav-btn&quot; data-target=&quot;sec-encuestas&quot; style=&quot;padding: 10px 15px; cursor: pointer;&quot;&gt;&#128221; Encuestas &amp; Votos&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;button class=&quot;admin-nav-btn&quot; data-target=&quot;sec-config&quot; style=&quot;padding: 10px 15px; cursor: pointer;&quot;&gt;&#9881;&#65039; Configuraci&oacute;n &amp; Pass&lt;/button&gt;<br> &nbsp; &nbsp;&lt;/nav&gt;<br><br> &nbsp; &nbsp;&lt;main class=&quot;admin-container&quot;&gt;<br><br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;!-- 1. SECCI&Oacute;N: PANEL &amp; ESTAD&Iacute;STICAS --&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;section id=&quot;sec-panel&quot; class=&quot;admin-section&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;h2&gt;Estad&iacute;sticas de la Web&lt;/h2&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;div class=&quot;stats-box&quot; style=&quot;background: var(--panel-bg, #111); padding: 15px; border-radius: 8px; margin-bottom: 20px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;p&gt;&lt;strong&gt;Visitas Totales:&lt;/strong&gt; &lt;span id=&quot;admin-visitas&quot;&gt;0&lt;/span&gt;&lt;/p&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;p&gt;&lt;strong&gt;Clicks en WhatsApp:&lt;/strong&gt; &lt;span id=&quot;admin-clicks&quot;&gt;0&lt;/span&gt;&lt;/p&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;p id=&quot;calc-conversion&quot;&gt;&lt;strong&gt;Conversi&oacute;n:&lt;/strong&gt; 0%&lt;/p&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/div&gt;<br><br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;h3&gt;Seguidores Comunidad&lt;/h3&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;div style=&quot;margin-bottom: 20px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;number&quot; id=&quot;input-seguidores&quot; placeholder=&quot;N&uacute;mero de seguidores&quot; style=&quot;padding: 8px; margin-right: 5px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-guardar-seguidores&quot; style=&quot;padding: 8px 15px;&quot;&gt;Guardar&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/div&gt;<br><br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;h3&gt;Socios VIP (1 al 10)&lt;/h3&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;div style=&quot;margin-bottom: 20px; display: flex; gap: 5px; flex-wrap: wrap;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;number&quot; id=&quot;socio-num&quot; placeholder=&quot;N&ordm; (1-10)&quot; min=&quot;1&quot; max=&quot;10&quot; style=&quot;padding: 8px; width: 90px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;text&quot; id=&quot;socio-name&quot; placeholder=&quot;Nombre del Socio&quot; style=&quot;padding: 8px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;select id=&quot;socio-status&quot; style=&quot;padding: 8px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;option value=&quot;active&quot;&gt;Activo (Desbloqueado)&lt;/option&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;option value=&quot;locked&quot;&gt;Bloqueado&lt;/option&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/select&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-guardar-socio&quot; style=&quot;padding: 8px 15px;&quot;&gt;Guardar Socio&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/div&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;/section&gt;<br><br><br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;!-- 2. SECCI&Oacute;N: CONTENIDO &amp; DEBATES --&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;section id=&quot;sec-contenido&quot; class=&quot;admin-section&quot; style=&quot;display: none;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;h2&gt;Publicar Alerta Global&lt;/h2&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;div style=&quot;margin-bottom: 20px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;text&quot; id=&quot;alert-text&quot; placeholder=&quot;Texto de la alerta...&quot; style=&quot;padding: 8px; width: 100%; margin-bottom: 5px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;text&quot; id=&quot;alert-link&quot; placeholder=&quot;Link opcional (http...)&quot; style=&quot;padding: 8px; width: 100%; margin-bottom: 5px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-publicar-alerta&quot; style=&quot;padding: 8px 15px;&quot;&gt;Publicar Alerta&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-quitar-alerta&quot; style=&quot;padding: 8px 15px; background: #e53e3e; color: #fff;&quot;&gt;Quitar Alerta&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/div&gt;<br><br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;h2&gt;Publicar Debate / Noticia&lt;/h2&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;div style=&quot;margin-bottom: 20px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;text&quot; id=&quot;news-title&quot; placeholder=&quot;T&iacute;tulo del debate&quot; style=&quot;padding: 8px; width: 100%; margin-bottom: 5px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;textarea id=&quot;news-desc&quot; placeholder=&quot;Resumen o contenido...&quot; style=&quot;padding: 8px; width: 100%; margin-bottom: 5px; height: 80px;&quot;&gt;&lt;/textarea&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;text&quot; id=&quot;news-cat&quot; placeholder=&quot;Categor&iacute;a (Ej: DEBATE, POL&Eacute;MICA)&quot; style=&quot;padding: 8px; width: 100%; margin-bottom: 5px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-publicar-news&quot; style=&quot;padding: 8px 15px;&quot;&gt;Publicar Debate&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/div&gt;<br><br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;h2&gt;Historial de Debates Activos&lt;/h2&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;div id=&quot;historial-debates&quot; style=&quot;margin-bottom: 20px;&quot;&gt;&lt;/div&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;/section&gt;<br><br><br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;!-- 3. SECCI&Oacute;N: ENCUESTAS &amp; VOTOS --&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;section id=&quot;sec-encuestas&quot; class=&quot;admin-section&quot; style=&quot;display: none;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;h2&gt;Ver Votos de la Encuesta Actual&lt;/h2&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;div id=&quot;admin-votos-activos&quot; style=&quot;background: var(--panel-bg, #111); padding: 15px; border-radius: 8px; margin-bottom: 20px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;p style=&quot;color:var(--text-muted);&quot;&gt;Cargando votos...&lt;/p&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/div&gt;<br><br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;h2&gt;Lanzar Nueva Encuesta / Cuestionario&lt;/h2&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;div style=&quot;margin-bottom: 20px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;text&quot; id=&quot;quiz-question&quot; placeholder=&quot;Pregunta de la encuesta&quot; style=&quot;padding: 8px; width: 100%; margin-bottom: 5px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;text&quot; id=&quot;quiz-opt1&quot; placeholder=&quot;Opci&oacute;n 1&quot; style=&quot;padding: 8px; width: 100%; margin-bottom: 5px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;text&quot; id=&quot;quiz-opt2&quot; placeholder=&quot;Opci&oacute;n 2&quot; style=&quot;padding: 8px; width: 100%; margin-bottom: 5px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;text&quot; id=&quot;quiz-opt3&quot; placeholder=&quot;Opci&oacute;n 3 (Opcional)&quot; style=&quot;padding: 8px; width: 100%; margin-bottom: 5px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;text&quot; id=&quot;quiz-opt4&quot; placeholder=&quot;Opci&oacute;n 4 (Opcional)&quot; style=&quot;padding: 8px; width: 100%; margin-bottom: 5px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-publicar-quiz&quot; style=&quot;padding: 8px 15px;&quot;&gt;Lanzar Cuestionario&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/div&gt;<br><br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;h2&gt;Historial de Encuestas&lt;/h2&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;div id=&quot;historial-encuestas&quot; style=&quot;margin-bottom: 20px;&quot;&gt;&lt;/div&gt;<br><br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;h2&gt;Cargar Partidos (API Externa)&lt;/h2&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-fetch-api&quot; style=&quot;padding: 8px 15px; margin-bottom: 10px;&quot;&gt;Obtener Partidos de la API&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;div id=&quot;lista-partidos-api&quot;&gt;&lt;/div&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;/section&gt;<br><br><br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;!-- 4. SECCI&Oacute;N: CONFIGURACI&Oacute;N &amp; CONTRASE&Ntilde;A --&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;section id=&quot;sec-config&quot; class=&quot;admin-section&quot; style=&quot;display: none;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;h2&gt;Cambiar Contrase&ntilde;a de Administrador&lt;/h2&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;div style=&quot;margin-bottom: 20px;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;input type=&quot;password&quot; id=&quot;admin-new-pass&quot; placeholder=&quot;Nueva contrase&ntilde;a (m&iacute;nimo 4 caracteres)&quot; style=&quot;padding: 8px; width: 100%; max-width: 300px; margin-bottom: 5px; display: block;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-cambiar-pass&quot; style=&quot;padding: 8px 15px;&quot;&gt;Actualizar Contrase&ntilde;a&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/div&gt;<br><br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;h2&gt;Cambiar Tema de la Web&lt;/h2&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;div style=&quot;display: flex; gap: 5px; flex-wrap: wrap;&quot;&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-tema-oscuro&quot; style=&quot;padding: 8px 12px;&quot;&gt;Oscuro&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-tema-claro&quot; style=&quot;padding: 8px 12px;&quot;&gt;Claro&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-tema-match&quot; style=&quot;padding: 8px 12px;&quot;&gt;Matchday&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-tema-champions&quot; style=&quot;padding: 8px 12px;&quot;&gt;Champions&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-tema-mundial&quot; style=&quot;padding: 8px 12px;&quot;&gt;Mundial&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;button id=&quot;btn-tema-auto&quot; style=&quot;padding: 8px 12px;&quot;&gt;Autom&aacute;tico&lt;/button&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/div&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp;&lt;/section&gt;<br><br> &nbsp; &nbsp;&lt;/main&gt;<br><br> &nbsp; &nbsp;&lt;!-- Script principal de Firebase y l&oacute;gica del panel --&gt;<br> &nbsp; &nbsp;&lt;script type=&quot;module&quot; src=&quot;main.js&quot;&gt;&lt;/script&gt;<br>&lt;/body&gt;<br>&lt;/html&gt;</span></p></body></html>
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Panel de Administración</title>
+    <style>
+      :root{--bg:#ffffff;--card:#f7f7f7;--accent:#e53e3e;--muted:#666}
+      body.doc-content{
+        background-color:var(--bg);
+        max-width:468pt;
+        padding:72pt;
+        font-family: Arial, Helvetica, sans-serif;
+        color:#111;
+        line-height:1.4;
+      }
+      header.admin-head{margin-bottom:20px}
+      header.admin-head h1{font-size:20px;margin:0 0 8px}
+      header.admin-head p{margin:0;color:var(--muted)}
+
+      .admin-nav{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+      .admin-nav button{padding:10px 15px;border-radius:6px;border:0;cursor:pointer}
+      .btn-primary{background:#1f6feb;color:#fff}
+      .btn-muted{background:#eee;color:#333}
+
+      .section{background:var(--card);padding:15px;border-radius:8px;margin-bottom:20px}
+      .section h2{margin:0 0 8px;font-size:16px}
+      .form-row{display:flex;gap:12px;align-items:center;margin:10px 0}
+      .form-row label{min-width:160px;font-weight:600}
+      input[type="text"], input[type="number"], select, textarea{
+        padding:8px;border-radius:6px;border:1px solid #ddd;flex:1;max-width:100%
+      }
+      textarea{min-height:80px}
+      .controls{display:flex;gap:8px;flex-wrap:wrap}
+
+      footer{margin-top:30px;color:var(--muted);font-size:14px}
+    </style>
+  </head>
+
+  <body class="doc-content">
+    <header class="admin-head">
+      <h1>Panel de Administración</h1>
+      <p>Panel de control — gestión de contenidos, encuestas, debates y configuración del sitio.</p>
+    </header>
+
+    <nav class="admin-nav">
+      <button class="btn-primary" data-target="panel-estado">Panel Estado</button>
+      <button class="btn-muted" data-target="config-contenido">Config Contenido</button>
+      <button class="btn-muted" data-target="encuestas">Encuestas</button>
+      <button class="btn-muted" data-target="debates">Debates</button>
+      <button class="btn-muted" data-target="publicar">Publicar</button>
+    </nav>
+
+    <main>
+      <section id="panel-estado" class="section">
+        <h2>Estado del Panel</h2>
+        <p>Visitas totales: <strong>—</strong></p>
+        <div class="form-row">
+          <label for="visitas-totales">Visitas totales</label>
+          <input id="visitas-totales" type="number" placeholder="0" />
+        </div>
+        <div class="controls">
+          <button class="btn-primary">Actualizar</button>
+          <button class="btn-muted">Restaurar por defecto</button>
+        </div>
+      </section>
+
+      <section id="config-contenido" class="section">
+        <h2>Configuración de Contenido</h2>
+        <div class="form-row">
+          <label for="seccion-activa">Sección activa</label>
+          <select id="seccion-activa">
+            <option value="home">Inicio</option>
+            <option value="noticias">Noticias</option>
+            <option value="debates">Debates</option>
+            <option value="encuestas">Encuestas</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="publicar-delay">Delay de publicación (seg)</label>
+          <input id="publicar-delay" type="number" min="0" value="0" />
+        </div>
+        <div class="form-row">
+          <label for="cont-estado">Contenido destacado</label>
+          <input id="cont-estado" type="text" placeholder="Título o resumen" />
+        </div>
+        <div class="controls">
+          <button class="btn-primary">Guardar configuración</button>
+          <button class="btn-muted">Cancelar</button>
+        </div>
+      </section>
+
+      <section id="encuestas" class="section">
+        <h2>Encuestas</h2>
+        <div class="form-row">
+          <label for="encuesta-titulo">Título</label>
+          <input id="encuesta-titulo" type="text" placeholder="Título de la encuesta" />
+        </div>
+        <div class="form-row">
+          <label for="encuesta-opciones">Opciones (separadas por comas)</label>
+          <input id="encuesta-opciones" type="text" placeholder="Sí,No,Tal vez" />
+        </div>
+        <div class="controls">
+          <button class="btn-primary">Crear encuesta</button>
+          <button class="btn-muted">Ver historial</button>
+        </div>
+      </section>
+
+      <section id="debates" class="section">
+        <h2>Debates</h2>
+        <div class="form-row">
+          <label for="debate-titulo">Título</label>
+          <input id="debate-titulo" type="text" placeholder="Título del debate" />
+        </div>
+        <div class="form-row">
+          <label for="debate-contenido">Contenido</label>
+          <textarea id="debate-contenido" placeholder="Escribe el cuerpo del debate..."></textarea>
+        </div>
+        <div class="controls">
+          <button class="btn-primary">Publicar debate</button>
+          <button class="btn-muted">Historial de debates</button>
+        </div>
+      </section>
+
+      <section id="cuentas" class="section">
+        <h2>Seguridad y Cuentas</h2>
+        <div class="form-row">
+          <label for="usuario">Usuario</label>
+          <input id="usuario" type="text" placeholder="admin" />
+        </div>
+        <div class="form-row">
+          <label for="nueva-clave">Cambiar contraseña</label>
+          <input id="nueva-clave" type="password" placeholder="Nueva contraseña" />
+        </div>
+        <div class="controls">
+          <button class="btn-primary">Guardar contraseña</button>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>
+      <p>Panel generado — Futbol y Mas</p>
+    </footer>
+  </body>
+</html>
