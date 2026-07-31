@@ -291,39 +291,80 @@ footer {
     font-size: 0.9rem;
 }
 
-@media (max-width: 768px) {
-    /* Ajustes generales para móvil */
-    .hero-content h1 { font-size: 2.5rem; }
-    .hero-content p { font-size: 1rem; }
-    .section-title { font-size: 2rem; }
+/* =========================================
+   ADAPTACIÓN PARA TABLETS (Hasta 1024px)
+   ========================================= */
+@media (max-width: 1024px) {
+    .hero-content h1 { font-size: 3rem; }
+    .hero-content p { font-size: 1.1rem; }
+    .section-title { font-size: 2.2rem; }
     
-    /* Configuración del Menú Desplegable */
+    /* Pasamos las cuadrículas a 2 columnas en tablet */
+    .carnets-grid { grid-template-columns: repeat(2, 1fr); }
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* =========================================
+   ADAPTACIÓN PARA MÓVILES (Hasta 768px)
+   ========================================= */
+@media (max-width: 768px) {
+    /* FIX: El fondo épico en móviles */
+    .hero {
+        background-attachment: scroll; /* Esto arregla el bug del fondo roto en móviles */
+        background-position: center top; 
+    }
+
+    .hero-content h1 { font-size: 2.2rem; margin-bottom: 1rem; }
+    .hero-content p { font-size: 0.95rem; }
+    
+    .navbar { padding: 1rem 1.5rem; }
+    .logo { font-size: 1.5rem; }
+    
+    /* Mostrar botón hamburguesa y asegurar que quede arriba */
     .hamburger {
         display: block;
+        z-index: 1001; 
     }
+
+    /* Menú Desplegable: Técnica segura con max-height */
     .nav-links {
         position: absolute;
-        top: 100%;
+        top: 100%; /* Empieza justo debajo del navbar */
         left: 0;
         width: 100%;
-        background: rgba(10, 10, 10, 0.98);
+        background: #0a0a0a;
         flex-direction: column;
         align-items: center;
+        
+        /* Oculto por defecto usando max-height */
+        max-height: 0;
+        overflow: hidden;
+        padding: 0;
+        border-bottom: none;
+        transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out, border-bottom 0.4s;
+    }
+
+    /* Clase activa que inyecta JS al pulsar el botón */
+    .nav-links.active {
+        max-height: 500px; /* Altura suficiente para que quepa todo */
         padding: 2rem 0;
         border-bottom: 2px solid var(--accent);
-        clip-path: polygon(0 0, 100% 0, 100% 0, 0 0); /* Oculto por defecto */
-        transition: clip-path 0.4s ease-in-out;
     }
-    .nav-links.active {
-        clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%); /* Desplegado */
-    }
+
     .nav-links a {
-        margin: 1rem 0;
+        margin: 15px 0;
         font-size: 1.2rem;
     }
+
     .btn-whatsapp {
         margin-top: 1rem;
         width: 80%;
         text-align: center;
     }
+
+    /* Todo a 1 columna en móvil */
+    .carnets-grid { grid-template-columns: 1fr; }
+    .features-grid { grid-template-columns: 1fr; }
+    .news-grid { grid-template-columns: 1fr; }
+    .partido-box { padding: 2rem 1rem; font-size: 1.5rem; }
 }
