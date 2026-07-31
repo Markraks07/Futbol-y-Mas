@@ -3,44 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FYM | Dashboard Admin</title>
+    <title>FYM | Dashboard Admin Avanzado</title>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #0a0a0a; --panel: #111; --accent: #e53e3e; --text: #fff; --gold: #ecc94b;}
         body { margin: 0; font-family: 'Roboto', sans-serif; background: var(--bg); color: var(--text); }
         h1, h2 { font-family: 'Oswald', sans-serif; text-transform: uppercase; }
         
-        /* PANTALLA DE LOGIN */
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 1000;
-        }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
         .login-box { background: var(--panel); padding: 3rem; border-radius: 8px; border: 1px solid #333; text-align: center; }
         .login-box input { padding: 10px; width: 100%; margin: 15px 0; background: #222; border: 1px solid #444; color: white; border-radius: 4px; }
         .login-box button { background: var(--accent); color: white; padding: 12px; border: none; cursor: pointer; width: 100%; font-weight: bold; border-radius: 4px; }
         .error-msg { color: var(--accent); display: none; margin-top: 10px; font-size: 0.9rem; }
 
-        /* DASHBOARD PRINCIPAL */
         #dashboard { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem; }
         .header a { color: #888; text-decoration: none; }
         
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; }
         .card { background: var(--panel); padding: 2rem; border-radius: 8px; border: 1px solid #222; }
-        .card h2 { color: var(--accent); margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .card h2 { color: var(--accent); margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 1.2rem; }
         
         input, select, textarea { width: 100%; padding: 10px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; }
         button { background: var(--accent); color: white; border: none; padding: 12px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.3s; }
         button:hover { background: #c53030; }
         
-        .btn-theme { width: 100%; margin-bottom: 10px; background: #333; }
+        .btn-theme { width: 100%; margin-bottom: 8px; background: #333; font-size: 0.9rem; }
         .btn-theme:hover { background: #555; }
 
-        /* ESTILOS ESTADÍSTICAS */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .stat-box { background: #222; padding: 15px; border-radius: 6px; text-align: center; }
-        .stat-box.highlight { border: 1px solid var(--accent); }
         .stat-box span { display: block; font-size: 2rem; font-weight: bold; color: var(--gold); }
         .stat-box p { margin: 0; font-size: 0.8rem; color: #aaa; text-transform: uppercase; }
         .math-result { background: #1a1a1a; padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 0.9rem; color: #ccc; border-left: 3px solid var(--accent); }
@@ -48,87 +40,92 @@
 </head>
 <body>
 
-    <!-- Pantalla de Login -->
     <div id="login-screen">
         <div class="login-box">
-            <h1 style="color: var(--accent);">ÁREA RESTRINGIDA</h1>
-            <p>Introduce la contraseña</p>
+            <h1 style="color: var(--accent);">ADMINISTRACIÓN FYM</h1>
             <input type="password" id="admin-pass" placeholder="Contraseña">
-            <button id="btn-login">ACCEDER</button>
+            <button id="btn-login">ENTRAR</button>
             <p class="error-msg" id="error-msg">Contraseña incorrecta.</p>
-            <a href="index.html" style="color: #666; display: block; margin-top: 20px; font-size: 0.8rem;">&larr; Volver a la web</a>
+            <a href="index.html" style="color: #666; display: block; margin-top: 20px; font-size: 0.8rem;">&larr; Volver</a>
         </div>
     </div>
 
-    <!-- Panel de Control -->
     <div id="dashboard">
         <div class="header">
             <h1>Panel de Control <span style="color: var(--accent);">FYM</span></h1>
-            <a href="index.html">&larr; Ver página pública</a>
+            <a href="index.html">&larr; Ver web pública</a>
         </div>
 
         <div class="grid">
             
-            <!-- ESTADÍSTICAS Y CÁLCULOS -->
-            <div class="card" style="grid-column: 1 / -1;">
-                <h2>📊 Estadísticas de la Comunidad</h2>
+            <!-- ALERTAS Y ESTADÍSTICAS -->
+            <div class="card">
+                <h2>🚨 Mensaje Global (Banner)</h2>
+                <input type="text" id="alert-text" placeholder="Ej: ¡Último vídeo subido! Toca aquí.">
+                <input type="text" id="alert-link" placeholder="URL si quieres que al tocar vayan a un sitio (opcional)">
+                <button id="btn-publicar-alerta" style="width: 100%; background: #e67e22; margin-bottom: 10px;">Activar Banner</button>
+                <button id="btn-quitar-alerta" style="width: 100%; background: #333;">Ocultar Banner</button>
+            </div>
+
+            <div class="card">
+                <h2>📊 Analítica Rápida</h2>
                 <div class="stats-grid">
-                    <div class="stat-box">
-                        <span id="admin-visitas">0</span>
-                        <p>Visitas a la Web</p>
-                    </div>
-                    <div class="stat-box">
-                        <span id="admin-clicks">0</span>
-                        <p>Clics a WhatsApp</p>
-                    </div>
+                    <div class="stat-box"><span id="admin-visitas">0</span><p>Visitas</p></div>
+                    <div class="stat-box"><span id="admin-clicks">0</span><p>Clics WA</p></div>
                 </div>
-                
-                <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 15px;">
-                    <label style="color: var(--accent); font-weight: bold;">¿Cuántos seguidores hay en el canal ahora mismo?</label>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="number" id="input-seguidores" placeholder="Ej: 1500" style="margin: 0;">
-                        <button id="btn-guardar-seguidores" style="width: auto;">Actualizar</button>
-                    </div>
-                </div>
-
-                <div style="margin-top: 15px;">
-                    <div class="math-result" id="calc-conversion"><strong>Conversión de Clics:</strong> Esperando datos...</div>
-                    <div class="math-result" id="calc-efectividad"><strong>Efectividad Real:</strong> Esperando datos...</div>
-                </div>
+                <input type="number" id="input-seguidores" placeholder="Seguidores actuales" style="margin-top:15px;">
+                <button id="btn-guardar-seguidores" style="width: 100%;">Actualizar Métricas</button>
+                <div class="math-result" id="calc-conversion">Esperando...</div>
             </div>
 
-            <!-- Gestión del Tema -->
+            <!-- GESTIÓN DE SOCIOS -->
             <div class="card">
-                <h2>🎨 Apariencia</h2>
-                <button class="btn-theme" id="btn-tema-oscuro" style="border-left: 5px solid #000;">Modo Oscuro</button>
-                <button class="btn-theme" id="btn-tema-claro" style="border-left: 5px solid #fff; color: #000; background: #ccc;">Modo Claro</button>
-                <button class="btn-theme" id="btn-tema-match" style="border-left: 5px solid #ffcc00;">Modo "Día de Partido"</button>
+                <h2>🏆 Alta/Baja de Socios (Club 10)</h2>
+                <input type="number" id="socio-num" placeholder="Nº de Carnet (1 al 10)" min="1" max="10">
+                <input type="text" id="socio-name" placeholder="Nombre del Socio">
+                <select id="socio-status">
+                    <option value="active">🟢 Activo / Ocupado</option>
+                    <option value="locked">🔴 Vacante / Bloqueado</option>
+                </select>
+                <button id="btn-guardar-socio" style="width: 100%; background: var(--gold); color: #000;">Guardar Carnet</button>
             </div>
 
-            <!-- Publicar Noticias -->
+            <!-- TEMAS -->
             <div class="card">
-                <h2>📰 Lanzar Novedad / Debate</h2>
-                <input type="text" id="news-cat" placeholder="Categoría (Ej: DEBATE, FICHAJE)">
-                <input type="text" id="news-title" placeholder="Título para picar a la gente">
-                <textarea id="news-desc" rows="4" placeholder="Escribe aquí de qué va el tema..."></textarea>
-                <button id="btn-publicar-news" style="width: 100%;">PUBLICAR EN LA WEB</button>
+                <h2>🎨 Apariencia Inteligente</h2>
+                <button class="btn-theme" id="btn-tema-auto" style="border-left: 5px solid #25D366; background: #1a5c32; color:white;">🤖 MODO AUTOMÁTICO (Según API)</button>
+                <hr style="border-color: #333; margin: 15px 0;">
+                <p style="font-size: 0.8rem; color:#888; margin-top:0;">Forzar manualmente:</p>
+                <button class="btn-theme" id="btn-tema-oscuro" style="border-left: 5px solid #000;">Oscuro (Defecto)</button>
+                <button class="btn-theme" id="btn-tema-claro" style="border-left: 5px solid #fff; color: #000; background: #ccc;">Claro (Arreglado)</button>
+                <button class="btn-theme" id="btn-tema-match" style="border-left: 5px solid #ffcc00;">Día de Partido (Genérico)</button>
+                <button class="btn-theme" id="btn-tema-champions" style="border-left: 5px solid #00ccff; background: #002952;">Noches de Champions</button>
+                <button class="btn-theme" id="btn-tema-mundial" style="border-left: 5px solid #ffcc00; background: #660000;">Modo Mundial / Selecciones</button>
             </div>
 
-            <!-- Porras / Partidos -->
+            <!-- PORRAS -->
             <div class="card">
-                <h2>⚽ Configurar Porra</h2>
-                <button id="btn-fetch-api" style="width: 100%; background: #25D366;">Buscar partidos en la API</button>
+                <h2>⚽ Fijar Partido (API)</h2>
+                <button id="btn-fetch-api" style="width: 100%; background: #25D366;">Cargar Próximos Partidos</button>
                 <div id="lista-partidos-api" style="margin-top: 15px; max-height: 250px; overflow-y: auto;"></div>
             </div>
+
+            <!-- NOTICIAS -->
+            <div class="card">
+                <h2>📰 Lanzar Novedad</h2>
+                <input type="text" id="news-cat" placeholder="Categoría (Ej: ÚLTIMA HORA)">
+                <input type="text" id="news-title" placeholder="Titular">
+                <textarea id="news-desc" rows="3" placeholder="Desarrollo..."></textarea>
+                <button id="btn-publicar-news" style="width: 100%;">Publicar</button>
+            </div>
+
         </div>
     </div>
 
     <script type="module">
         const CLAVE_SECRETA = "FYM2026"; 
-
         document.getElementById('btn-login').addEventListener('click', () => {
-            const pass = document.getElementById('admin-pass').value;
-            if(pass === CLAVE_SECRETA) {
+            if(document.getElementById('admin-pass').value === CLAVE_SECRETA) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'block';
                 const script = document.createElement('script');
