@@ -8,6 +8,7 @@
     --accent: #e53e3e; /* Rojo épico */
     --accent-hover: #c53030;
     --gold: #ecc94b;
+    --panel-bg: #111111;
 }
 
 * {
@@ -70,13 +71,6 @@ h1, h2, h3, .logo {
     font-size: 0.9rem;
 }
 
-.btn-whatsapp {
-    background: #25D366;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    color: #fff !important;
-}
-
 .hamburger {
     display: none; /* Oculto en ordenador */
     background: transparent;
@@ -92,136 +86,139 @@ h1, h2, h3, .logo {
 }
 
 /* =========================================
-   HERO SECTION
+   CABECERA MINI-HERO (Sustituye al Hero gigante)
    ========================================= */
-.hero {
-    position: relative;
-    height: 100vh;
-    background-image: url('https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?q=80&w=2082&auto=format&fit=crop');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.mini-hero {
     text-align: center;
-}
-
-.hero-overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.75);
-}
-
-.hero-content {
-    position: relative;
-    z-index: 10;
-    max-width: 800px;
-    padding: 0 2rem;
-}
-
-.hero-content h1 {
-    font-size: 4rem;
-    line-height: 1.1;
-    margin-bottom: 1.5rem;
-    text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
-}
-
-.hero-content p {
-    font-size: 1.2rem;
-    margin-bottom: 2.5rem;
-    color: var(--text-muted);
-}
-
-.btn-epic {
-    display: inline-block;
-    background: var(--accent);
-    color: white;
-    padding: 1rem 2.5rem;
-    font-size: 1.2rem;
-    font-weight: bold;
-    text-decoration: none;
-    border-radius: 4px;
-    box-shadow: 0 0 20px rgba(229, 62, 62, 0.5);
-    transition: transform 0.3s, background 0.3s;
-}
-
-.btn-epic:hover {
-    transform: scale(1.05);
-    background: var(--accent-hover);
-}
-
-/* =========================================
-   SECCIONES Y CONTENIDO
-   ========================================= */
-.section-title {
-    text-align: center;
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
-    color: var(--accent);
-}
-
-.section-que-es, .section-reto, .section-club, .section-news {
-    padding: 5rem 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-/* ¿Qué es FYM? */
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-}
-
-.feature-card {
-    background: #111;
-    padding: 2rem;
-    border-radius: 8px;
-    border: 1px solid #333;
-    transition: border-color 0.3s;
-}
-
-.feature-card:hover {
-    border-color: var(--accent);
-}
-
-.feature-card h3 {
-    color: var(--text-main);
-    margin-bottom: 1rem;
-    font-size: 1.3rem;
-}
-
-.feature-card p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-}
-
-/* Reto / Porra */
-.section-reto {
-    background: #111;
-    border-top: 1px solid #333;
+    padding: 4rem 1rem;
+    background: var(--panel-bg);
     border-bottom: 1px solid #333;
 }
 
-.partido-box {
-    text-align: center;
-    font-size: 2rem;
-    font-weight: bold;
-    background: #1a1a1a;
-    padding: 3rem;
-    border-radius: 8px;
+.mini-hero h1 { 
+    font-size: 2.8rem; 
+    margin-bottom: 0.5rem; 
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.5); 
+}
+
+.mini-hero p { 
+    color: var(--text-muted); 
+    font-size: 1.1rem; 
+    margin-bottom: 1.5rem; 
+}
+
+.btn-whatsapp {
+    display: inline-block; 
+    background: #25D366; 
+    color: white !important; 
+    padding: 12px 24px; 
+    font-weight: bold; 
+    text-decoration: none; 
+    border-radius: 4px; 
+    margin-top: 15px;
+    transition: transform 0.3s;
+}
+
+.btn-whatsapp:hover { 
+    transform: scale(1.05); 
+}
+
+/* =========================================
+   ESTRUCTURA DEL DASHBOARD PÚBLICO
+   ========================================= */
+.dashboard-publico {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    display: grid;
+    gap: 2rem;
+}
+
+.panel-box {
+    background: var(--panel-bg);
     border: 1px solid #333;
+    border-radius: 8px;
+    padding: 2rem;
 }
 
-/* Club de los 10 */
-.club-desc {
+.panel-title {
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+/* =========================================
+   LA PORRA / PARTIDOS
+   ========================================= */
+.partido-card {
     text-align: center;
-    max-width: 700px;
-    margin: -1.5rem auto 3rem auto;
-    color: var(--text-muted);
+    background: #000;
+    padding: 2.5rem;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border: 1px solid #222;
 }
 
+.btn-action {
+    display: block;
+    text-align: center;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    padding: 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.btn-action:hover { 
+    background: var(--accent-hover); 
+}
+
+/* =========================================
+   DEBATES Y NOTICIAS
+   ========================================= */
+.news-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 1.5rem; 
+}
+
+.news-card {
+    background: #000; 
+    padding: 1.5rem; 
+    border-radius: 6px; 
+    border: 1px solid #222; 
+    transition: border-color 0.3s;
+}
+
+.news-card:hover { 
+    border-color: var(--accent); 
+}
+
+.news-cat { 
+    color: var(--accent); 
+    font-weight: bold; 
+    font-size: 0.8rem; 
+    text-transform: uppercase;
+}
+
+.news-card h3 { 
+    margin: 8px 0; 
+    font-size: 1.2rem;
+}
+
+.news-card p { 
+    color: var(--text-muted); 
+    font-size: 0.95rem; 
+    margin-bottom: 15px;
+}
+
+/* =========================================
+   CLUB DE LOS 10 (CARNETS VIP)
+   ========================================= */
 .carnets-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -263,60 +260,23 @@ h1, h2, h3, .logo {
     color: #666;
 }
 
-/* Noticias */
-.news-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-.news-card {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.news-content {
-    padding: 1.5rem;
-}
-
-.news-title {
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
-}
-
-.news-desc {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-}
-
-.btn-read {
-    color: var(--accent);
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 0.9rem;
-}
-
-/* Footer */
+/* =========================================
+   FOOTER
+   ========================================= */
 footer {
     text-align: center;
     padding: 2rem;
     background: #000;
     color: #555;
+    border-top: 1px solid #222;
 }
 
 /* =========================================
    ADAPTACIÓN PARA TABLETS (Hasta 1024px)
    ========================================= */
 @media (max-width: 1024px) {
-    .hero-content h1 { font-size: 3rem; }
-    .hero-content p { font-size: 1.1rem; }
-    .section-title { font-size: 2.2rem; }
-    
+    .mini-hero h1 { font-size: 2.5rem; }
     .carnets-grid { grid-template-columns: repeat(2, 1fr); }
-    .features-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* =========================================
@@ -332,7 +292,7 @@ footer {
     }
 
     .hamburger {
-        display: block; /* Muestra el botón hamburguesa */
+        display: block; 
         z-index: 1001;
     }
 
@@ -373,23 +333,19 @@ footer {
         text-align: center;
     }
 
-    .btn-whatsapp {
-        width: 80%;
-        margin-top: 10px;
+    .mini-hero {
+        padding: 3rem 1rem;
     }
+    
+    .mini-hero h1 { font-size: 2.2rem; }
+    .mini-hero p { font-size: 0.95rem; }
 
-    /* Corrección del fondo fijo en móviles */
-    .hero {
-        background-attachment: scroll;
-        background-position: center top; 
-    }
-
-    .hero-content h1 { font-size: 2.2rem; margin-bottom: 1rem; }
-    .hero-content p { font-size: 0.95rem; }
-
-    /* Ajuste a 1 sola columna */
+    /* Ajuste a 1 sola columna en el dashboard */
+    .dashboard-publico { gap: 1.5rem; margin: 1.5rem auto; }
+    .panel-box { padding: 1.5rem; }
     .carnets-grid { grid-template-columns: 1fr; }
-    .features-grid { grid-template-columns: 1fr; }
     .news-grid { grid-template-columns: 1fr; }
-    .partido-box { padding: 2rem 1rem; font-size: 1.5rem; }
+    
+    /* El botón del menú móvil para WhatsApp */
+    .btn-whatsapp { width: 90%; }
 }
