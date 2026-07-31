@@ -90,6 +90,17 @@
                 <button id="btn-guardar-socio" style="width: 100%; background: var(--gold); color: #000;">Guardar Carnet</button>
             </div>
 
+            <!-- NUEVO: CUESTIONARIO / ENCUESTA -->
+            <div class="card">
+                <h2>📝 Crear Cuestionario / Encuesta</h2>
+                <input type="text" id="quiz-question" placeholder="Pregunta (Ej: ¿Quién ganará el Balón de Oro?)">
+                <input type="text" id="quiz-opt1" placeholder="Opción 1">
+                <input type="text" id="quiz-opt2" placeholder="Opción 2">
+                <input type="text" id="quiz-opt3" placeholder="Opción 3 (Opcional)">
+                <input type="text" id="quiz-opt4" placeholder="Opción 4 (Opcional)">
+                <button id="btn-publicar-quiz" style="width: 100%; background: #2b6cb0;">Lanzar Encuesta</button>
+            </div>
+
             <!-- TEMAS -->
             <div class="card">
                 <h2>🎨 Apariencia Inteligente</h2>
@@ -110,13 +121,13 @@
                 <div id="lista-partidos-api" style="margin-top: 15px; max-height: 250px; overflow-y: auto;"></div>
             </div>
 
-            <!-- NOTICIAS -->
+            <!-- NOTICIAS / DEBATES -->
             <div class="card">
-                <h2>📰 Lanzar Novedad</h2>
-                <input type="text" id="news-cat" placeholder="Categoría (Ej: ÚLTIMA HORA)">
+                <h2>📰 Lanzar Debate / Noticia</h2>
+                <input type="text" id="news-cat" placeholder="Categoría (Ej: DEBATE CALIENTE)">
                 <input type="text" id="news-title" placeholder="Titular">
-                <textarea id="news-desc" rows="3" placeholder="Desarrollo..."></textarea>
-                <button id="btn-publicar-news" style="width: 100%;">Publicar</button>
+                <textarea id="news-desc" rows="3" placeholder="Desarrollo del debate..."></textarea>
+                <button id="btn-publicar-news" style="width: 100%;">Publicar en la Web</button>
             </div>
 
         </div>
