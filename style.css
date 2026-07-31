@@ -26,25 +26,21 @@ h1, h2, h3, .logo {
     text-transform: uppercase;
 }
 
-/* Navegación */
-.navbar {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 3rem;
-    background: rgba(10, 10, 10, 0.95);
-    border-bottom: 1px solid #333;
-    z-index: 100;
-}
-
 .logo {
     font-size: 2rem;
     font-weight: 700;
     color: var(--accent);
     letter-spacing: 2px;
+}
+
+.navbar {
+    position: relative; /* Imprescindible para posicionar el desplegable */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #0a0a0a;
+    z-index: 1000; /* Asegura que la barra esté por encima de todo */
 }
 
 .nav-links a {
@@ -281,11 +277,20 @@ footer {
 
 /* --- ADAPTACIÓN MÓVIL Y MENÚ HAMBURGUESA --- */
 .hamburger {
-    display: none;
-    background: none;
+    display: none; /* Oculto en ordenador */
+    background: transparent;
     border: none;
     cursor: pointer;
+    padding: 0;
+    outline: none;
 }
+
+/* Permite que el clic traspase el SVG y lo detecte el botón siempre */
+.hamburger svg {
+    pointer-events: none;
+    display: block;
+}
+
 .btn-admin {
     color: #888 !important;
     font-size: 0.9rem;
@@ -308,6 +313,54 @@ footer {
    ADAPTACIÓN PARA MÓVILES (Hasta 768px)
    ========================================= */
 @media (max-width: 768px) {
+    .hamburger {
+        display: block; /* Mostrar botón en móvil */
+    }
+
+    .nav-links {
+        position: absolute;
+        top: 100%; /* Justo debajo del navbar */
+        left: 0;
+        width: 100%;
+        background-color: #0a0a0a;
+        
+        /* Flexbox obligatorio para colocar en columna */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        
+        /* Oculto por defecto con animación suave */
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        visibility: hidden;
+        transition: max-height 0.4s ease, opacity 0.3s ease, visibility 0.3s ease, padding 0.3s ease;
+        
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+        z-index: 999; /* Por encima de la sección Hero */
+    }
+
+    /* ESTADO ACTIVO (Al pulsar el botón) */
+    .nav-links.active {
+        max-height: 450px; /* Altura de despliegue */
+        opacity: 1;
+        visibility: visible;
+        padding: 1.5rem 0;
+        border-bottom: 2px solid var(--accent, #e53e3e);
+    }
+
+    .nav-links a {
+        margin: 12px 0;
+        font-size: 1.1rem;
+        width: 100%;
+        text-align: center;
+    }
+
+    .btn-whatsapp {
+        width: 80%;
+        margin-top: 10px;
+    }
+    
     /* FIX: El fondo épico en móviles */
     .hero {
         background-attachment: scroll; /* Esto arregla el bug del fondo roto en móviles */
@@ -321,46 +374,7 @@ footer {
     .logo { font-size: 1.5rem; }
     
     /* Mostrar botón hamburguesa y asegurar que quede arriba */
-    .hamburger {
-        display: block;
-        z-index: 1001; 
-    }
-
-    /* Menú Desplegable: Técnica segura con max-height */
-    .nav-links {
-        position: absolute;
-        top: 100%; /* Empieza justo debajo del navbar */
-        left: 0;
-        width: 100%;
-        background: #0a0a0a;
-        flex-direction: column;
-        align-items: center;
-        
-        /* Oculto por defecto usando max-height */
-        max-height: 0;
-        overflow: hidden;
-        padding: 0;
-        border-bottom: none;
-        transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out, border-bottom 0.4s;
-    }
-
-    /* Clase activa que inyecta JS al pulsar el botón */
-    .nav-links.active {
-        max-height: 500px; /* Altura suficiente para que quepa todo */
-        padding: 2rem 0;
-        border-bottom: 2px solid var(--accent);
-    }
-
-    .nav-links a {
-        margin: 15px 0;
-        font-size: 1.2rem;
-    }
-
-    .btn-whatsapp {
-        margin-top: 1rem;
-        width: 80%;
-        text-align: center;
-    }
+    
 
     /* Todo a 1 columna en móvil */
     .carnets-grid { grid-template-columns: 1fr; }
