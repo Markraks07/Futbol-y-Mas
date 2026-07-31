@@ -16,26 +16,32 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // =========================================================
-// LÓGICA DEL MENÚ HAMBURGUESA (Garantizado)
+// LÓGICA DEL MENÚ HAMBURGUESA
 // =========================================================
-document.addEventListener('DOMContentLoaded', () => {
-    const hamburgerBtn = document.getElementById('hamburger-btn');
-    const navLinks = document.getElementById('nav-links');
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const navLinks = document.getElementById('nav-links');
 
-    if (hamburgerBtn && navLinks) {
-        hamburgerBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Evita que el clic se cruce con otros elementos
-            navLinks.classList.toggle('active');
+if (hamburgerBtn && navLinks) {
+    // Abrir / Cerrar al pulsar el botón
+    hamburgerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        navLinks.classList.toggle('active');
+    });
+
+    // Cerrar al pulsar en cualquier enlace del menú
+    navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.classList.remove('active');
         });
-        
-        // Cerrar menú al hacer clic en cualquier enlace (ideal en móvil)
-        navLinks.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                navLinks.classList.remove('active');
-            });
-        });
-    }
-});
+    });
+
+    // Cerrar automáticamente si la pantalla se toca fuera del menú
+    document.addEventListener('click', (e) => {
+        if (!navLinks.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+            navLinks.classList.remove('active');
+        }
+    });
+}
 
 // =========================================================
 // 1. LÓGICA PÚBLICA (Para los visitantes)
