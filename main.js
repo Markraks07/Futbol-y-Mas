@@ -463,3 +463,122 @@ if (btnFetchApi) {
         } catch (e) { contenedor.innerHTML = "Error al conectar con la API."; }
     });
                   }
+// --- A. NAVEGACIÓN POR PESTAÑAS EN EL ADMIN ---
+document.addEventListener('DOMContentLoaded', () => {
+    const adminNavBtns = document.querySelectorAll('.admin-nav-btn');
+    const adminSections = document.querySelectorAll('.admin-section');
+
+    if (adminNavBtns.length > 0 && adminSections.length > 0) {
+        adminNavBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetId = e.currentTarget.getAttribute('data-target');
+                
+                adminNavBtns.forEach(b => b.classList.remove('active'));
+                adminSections.forEach(sec => sec.style.display = 'none');
+
+                e.currentTarget.classList.add('active');
+                const targetSec = document.getElementById(targetId);
+                if (targetSec) targetSec.style.display = 'block';
+            });
+        });
+        // Activar la primera por defecto
+        adminNavBtns[0].click();
+    }
+});
+
+// --- B. CAMBIO DE CONTRASEÑA DE ADMINISTRADOR ---
+const btnCambiarPass = document.getElementById('btn-cambiar-pass');
+if (btnCambiarPass) {
+    btnCambiarPass.addEventListener('click', () => {
+        const nuevaPass = document.getElementById('admin-new-pass').value.trim();
+        if (nuevaPass.length >= 4) {
+            set(ref(db, 'configuracion/admin_password'), nuevaPass).then(() => {
+                alert("¡Contraseña de administrador actualizada con éxito!");
+                document.getElementById('admin-new-pass').value = '';
+            });
+        } else {
+            alert("La contraseña debe tener al menos 4 caracteres.");
+        }
+    });
+}
+
+// --- C. VOTACIÓN AVANZADA CON PORCENTAJES Y VISTAS EN ADMIN ---
+// Esta función reemplaza la lógica básica de renderizado de la encuesta/cuestionario en la home con porcentajes automáticos:
+const observarCuestionarioAvanzado = () => {
+    const partidoContainer = document.getElementById('partido-container');
+    const tituloInteractivo = document.getElementById('panel-interactivo-titulo');
+    
+    if (partidoContainer) {
+        onValue(ref(db, 'cuestionario_activo'), (quizSnap) => {
+            const qData = quizSnap.val();
+            if (qData) {
+                if(tituloInteractivo) tituloInteractivo.innerText = "📝 CUESTIONARIO ACTIVO (RESULTADOS)";
+                
+                let totalVotos = 0;
+                if (qData.votos) {
+                    Object.values(qData.votos).forEach(v => totalVotos += v);
+                }
+
+                let opcionesHTML = '';
+                qData.opciones.forEach((opt, index) => {
+                    if(opt) {
+                        const votosOpcion = (qData.votos && qData.votos[index]) ? qData.votos[index] : 0;
+                        const porcentaje = totalVotos > 0 ? ((votosOpcion / totalVotos) * 100).toFixed(1) : 0;
+                        
+                        opcionesHTML += `
+                            <div class="quiz-option-wrapper" style="margin-bottom: 10px;">
+                                <button class="btn-quiz-option" data-index="${index}" style="width:100%; text-align:left; padding:10px; margin-bottom:5px;">${opt} (${votosOpcion} votos - <strong>${porcentaje}%</strong>)</button>
+                                <div style="background: #222; height: 6px; border-radius: 3px; overflow: hidden;">
+                                    <div style="background: var(--accent, #e53e3e); width: ${porcentaje}%; height: 100%;"></div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                partidoContainer.innerHTML = `
+                    <h3 style="font-size: 1.3rem; margin-bottom: 15px; color: var(--text-main);">${qData.pregunta}</h3>
+                    <div class="quiz-options-container">${opcionesHTML}</div>
+                    <div id="quiz-resultado" style="margin-top: 15px; font-size: 0.9rem; color: var(--accent);">Total de votos: ${totalVotos}</div>
+                `;
+
+                partidoContainer.querySelectorAll('.btn-quiz-option').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const idx = e.currentTarget.getAttribute('data-index');
+                        const votoRef = ref(db, `cuestionario_activo/votos/${idx}`);
+                        get(votoRef).then(vSnap => {
+                            const actuales = vSnap.val() || 0;
+                            set(votoRef, actuales + 1);
+                            alert("¡Voto registrado correctamente!");
+                        });
+                    });
+                });
+            }
+        });
+    }
+};
+observarCuestionarioAvanzado();
+
+// --- D. PANEL ADMIN: VER VOTOS DE LA ENCUESTA ACTUAL ---
+const adminVotosContainer = document.getElementById('admin-votos-activos');
+if (adminVotosContainer) {
+    onValue(ref(db, 'cuestionario_activo'), (snap) => {
+        const qData = snap.val();
+        if (qData && qData.opciones) {
+            let total = 0;
+            if(qData.votos) Object.values(qData.votos).forEach(v => total += v);
+            
+            let html = `<p><strong>Pregunta:</strong> ${qData.pregunta} (Total: ${total} votos)</p><ul>`;
+            qData.opciones.forEach((opt, idx) => {
+                if(opt) {
+                    let v = (qData.votos && qData.votos[idx]) ? qData.votos[idx] : 0;
+                    html += `<li>${opt}: <strong>${v} votos</strong></li>`;
+                }
+            });
+            html += `</ul>`;
+            adminVotosContainer.innerHTML = html;
+        } else {
+            adminVotosContainer.innerHTML = `<p style="color:var(--text-muted);">No hay ningún cuestionario activo en este momento para ver votos.</p>`;
+        }
+    });
+}
