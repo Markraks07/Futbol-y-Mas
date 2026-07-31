@@ -131,6 +131,23 @@ h1, h2, h3, .logo { font-family: 'Oswald', sans-serif; text-transform: uppercase
 .comment-form { display: flex; gap: 6px; margin-top: 8px; }
 .comment-form input { margin: 0 !important; font-size: 0.8rem; padding: 6px; }
 .comment-form button { padding: 6px 12px; font-size: 0.8rem; }
+.comments-dropdown {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.comments-list, .comment-form {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.comment-form input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
 
 /* =========================================
    FOOTER
