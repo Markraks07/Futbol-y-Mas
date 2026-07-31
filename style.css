@@ -87,6 +87,21 @@ h1, h2, h3, .logo { font-family: 'Oswald', sans-serif; text-transform: uppercase
 .carnet.locked .carnet-num { color: #888; }
 
 /* =========================================
+   ESTILOS PARA CUESTIONARIOS Y COMENTARIOS
+   ========================================= */
+.quiz-options { display: grid; gap: 10px; margin-top: 15px; }
+.btn-quiz-option { background: var(--panel-bg); border: 1px solid var(--accent); color: var(--text-main); padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; text-align: left; width: 100%; }
+.btn-quiz-option:hover { background: var(--accent); color: #fff; }
+
+.comments-section { margin-top: 20px; border-top: 1px dashed var(--card-border); padding-top: 15px; text-align: left; }
+.comments-list { max-height: 200px; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
+.comment-item { background: var(--panel-bg); padding: 8px 12px; border-radius: 4px; font-size: 0.9rem; border-left: 2px solid var(--accent); }
+.comment-item strong { color: var(--accent); display: block; font-size: 0.8rem; }
+.comment-form { display: flex; gap: 8px; margin-top: 10px; }
+.comment-form input { margin: 0 !important; font-size: 0.85rem; padding: 8px; }
+.comment-form button { padding: 8px 15px; font-size: 0.85rem; }
+
+/* =========================================
    FOOTER
    ========================================= */
 footer { text-align: center; padding: 2rem; background: var(--nav-bg); color: var(--text-muted); border-top: 1px solid var(--card-border); transition: background-color 0.4s ease; }
