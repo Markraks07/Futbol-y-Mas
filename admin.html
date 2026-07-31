@@ -20,7 +20,7 @@
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem; }
         .header a { color: #888; text-decoration: none; }
         
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin-bottom: 2rem; }
         .card { background: var(--panel); padding: 2rem; border-radius: 8px; border: 1px solid #222; }
         .card h2 { color: var(--accent); margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 1.2rem; }
         
@@ -36,6 +36,11 @@
         .stat-box span { display: block; font-size: 2rem; font-weight: bold; color: var(--gold); }
         .stat-box p { margin: 0; font-size: 0.8rem; color: #aaa; text-transform: uppercase; }
         .math-result { background: #1a1a1a; padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 0.9rem; color: #ccc; border-left: 3px solid var(--accent); }
+
+        .history-section { background: var(--panel); padding: 2rem; border-radius: 8px; border: 1px solid #222; margin-top: 2rem; }
+        .history-item { background: #1a1a1a; padding: 12px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #666; }
+        .history-actions { display: flex; gap: 5px; }
+        .history-actions button { padding: 6px 10px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -58,15 +63,16 @@
 
         <div class="grid">
             
-            <!-- ALERTAS Y ESTADÍSTICAS -->
+            <!-- ALERTAS -->
             <div class="card">
                 <h2>🚨 Mensaje Global (Banner)</h2>
                 <input type="text" id="alert-text" placeholder="Ej: ¡Último vídeo subido! Toca aquí.">
-                <input type="text" id="alert-link" placeholder="URL si quieres que al tocar vayan a un sitio (opcional)">
+                <input type="text" id="alert-link" placeholder="URL opcional">
                 <button id="btn-publicar-alerta" style="width: 100%; background: #e67e22; margin-bottom: 10px;">Activar Banner</button>
                 <button id="btn-quitar-alerta" style="width: 100%; background: #333;">Ocultar Banner</button>
             </div>
 
+            <!-- ANALÍTICA -->
             <div class="card">
                 <h2>📊 Analítica Rápida</h2>
                 <div class="stats-grid">
@@ -78,9 +84,9 @@
                 <div class="math-result" id="calc-conversion">Esperando...</div>
             </div>
 
-            <!-- GESTIÓN DE SOCIOS -->
+            <!-- SOCIOS -->
             <div class="card">
-                <h2>🏆 Alta/Baja de Socios (Club 10)</h2>
+                <h2>🏆 Alta/Baja de Socios</h2>
                 <input type="number" id="socio-num" placeholder="Nº de Carnet (1 al 10)" min="1" max="10">
                 <input type="text" id="socio-name" placeholder="Nombre del Socio">
                 <select id="socio-status">
@@ -90,10 +96,10 @@
                 <button id="btn-guardar-socio" style="width: 100%; background: var(--gold); color: #000;">Guardar Carnet</button>
             </div>
 
-            <!-- NUEVO: CUESTIONARIO / ENCUESTA -->
+            <!-- CUESTIONARIO -->
             <div class="card">
-                <h2>📝 Crear Cuestionario / Encuesta</h2>
-                <input type="text" id="quiz-question" placeholder="Pregunta (Ej: ¿Quién ganará el Balón de Oro?)">
+                <h2>📝 Crear Cuestionario</h2>
+                <input type="text" id="quiz-question" placeholder="Pregunta">
                 <input type="text" id="quiz-opt1" placeholder="Opción 1">
                 <input type="text" id="quiz-opt2" placeholder="Opción 2">
                 <input type="text" id="quiz-opt3" placeholder="Opción 3 (Opcional)">
@@ -104,33 +110,45 @@
             <!-- TEMAS -->
             <div class="card">
                 <h2>🎨 Apariencia Inteligente</h2>
-                <button class="btn-theme" id="btn-tema-auto" style="border-left: 5px solid #25D366; background: #1a5c32; color:white;">🤖 MODO AUTOMÁTICO (Según API)</button>
+                <button class="btn-theme" id="btn-tema-auto" style="border-left: 5px solid #25D366; background: #1a5c32; color:white;">🤖 MODO AUTOMÁTICO</button>
                 <hr style="border-color: #333; margin: 15px 0;">
-                <p style="font-size: 0.8rem; color:#888; margin-top:0;">Forzar manualmente:</p>
                 <button class="btn-theme" id="btn-tema-oscuro" style="border-left: 5px solid #000;">Oscuro (Defecto)</button>
-                <button class="btn-theme" id="btn-tema-claro" style="border-left: 5px solid #fff; color: #000; background: #ccc;">Claro (Arreglado)</button>
-                <button class="btn-theme" id="btn-tema-match" style="border-left: 5px solid #ffcc00;">Día de Partido (Genérico)</button>
-                <button class="btn-theme" id="btn-tema-champions" style="border-left: 5px solid #00ccff; background: #002952;">Noches de Champions</button>
-                <button class="btn-theme" id="btn-tema-mundial" style="border-left: 5px solid #ffcc00; background: #660000;">Modo Mundial / Selecciones</button>
+                <button class="btn-theme" id="btn-tema-claro" style="border-left: 5px solid #fff; color: #000; background: #ccc;">Claro</button>
+                <button class="btn-theme" id="btn-tema-match" style="border-left: 5px solid #ffcc00;">Día de Partido</button>
+                <button class="btn-theme" id="btn-tema-champions" style="border-left: 5px solid #00ccff; background: #002952;">Champions</button>
+                <button class="btn-theme" id="btn-tema-mundial" style="border-left: 5px solid #ffcc00; background: #660000;">Mundial</button>
             </div>
 
-            <!-- PORRAS -->
+            <!-- PARTIDOS API -->
             <div class="card">
                 <h2>⚽ Fijar Partido (API)</h2>
                 <button id="btn-fetch-api" style="width: 100%; background: #25D366;">Cargar Próximos Partidos</button>
                 <div id="lista-partidos-api" style="margin-top: 15px; max-height: 250px; overflow-y: auto;"></div>
             </div>
 
-            <!-- NOTICIAS / DEBATES -->
+            <!-- DEBATES -->
             <div class="card">
-                <h2>📰 Lanzar Debate / Noticia</h2>
-                <input type="text" id="news-cat" placeholder="Categoría (Ej: DEBATE CALIENTE)">
+                <h2>📰 Lanzar Debate</h2>
+                <input type="text" id="news-cat" placeholder="Categoría (Ej: DEBATE)">
                 <input type="text" id="news-title" placeholder="Titular">
-                <textarea id="news-desc" rows="3" placeholder="Desarrollo del debate..."></textarea>
+                <textarea id="news-desc" rows="3" placeholder="Desarrollo..."></textarea>
                 <button id="btn-publicar-news" style="width: 100%;">Publicar en la Web</button>
             </div>
 
         </div>
+
+        <!-- HISTORIAL DE GESTIÓN (NUEVO) -->
+        <div class="history-section">
+            <h2 style="color: var(--accent); margin-top:0;">📚 Historial y Gestión de Contenido</h2>
+            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">Reutiliza elementos antiguos guardados o quítalos de la web para mantenerla limpia.</p>
+            
+            <h3 style="font-size: 1rem; color: var(--gold); border-bottom: 1px solid #333; padding-bottom: 5px;">Encuestas / Cuestionarios Anteriores</h3>
+            <div id="historial-encuestas" style="margin-bottom: 20px;"><p style="color:#666; font-size:0.85rem;">Cargando historial...</p></div>
+
+            <h3 style="font-size: 1rem; color: var(--gold); border-bottom: 1px solid #333; padding-bottom: 5px;">Debates Publicados</h3>
+            <div id="historial-debates"><p style="color:#666; font-size:0.85rem;">Cargando historial...</p></div>
+        </div>
+
     </div>
 
     <script type="module">
