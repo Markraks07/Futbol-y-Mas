@@ -1,146 +1,170 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel de Administración</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FYM | Dashboard Admin Avanzado</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-      :root{--bg:#ffffff;--card:#f7f7f7;--accent:#e53e3e;--muted:#666}
-      body.doc-content{
-        background-color:var(--bg);
-        max-width:468pt;
-        padding:72pt;
-        font-family: Arial, Helvetica, sans-serif;
-        color:#111;
-        line-height:1.4;
-      }
-      header.admin-head{margin-bottom:20px}
-      header.admin-head h1{font-size:20px;margin:0 0 8px}
-      header.admin-head p{margin:0;color:var(--muted)}
+        :root { --bg: #0a0a0a; --panel: #111; --accent: #e53e3e; --text: #fff; --gold: #ecc94b;}
+        body { margin: 0; font-family: 'Roboto', sans-serif; background: var(--bg); color: var(--text); }
+        h1, h2 { font-family: 'Oswald', sans-serif; text-transform: uppercase; }
+        
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+        .login-box { background: var(--panel); padding: 3rem; border-radius: 8px; border: 1px solid #333; text-align: center; }
+        .login-box input { padding: 10px; width: 100%; margin: 15px 0; background: #222; border: 1px solid #444; color: white; border-radius: 4px; }
+        .login-box button { background: var(--accent); color: white; padding: 12px; border: none; cursor: pointer; width: 100%; font-weight: bold; border-radius: 4px; }
+        .error-msg { color: var(--accent); display: none; margin-top: 10px; font-size: 0.9rem; }
 
-      .admin-nav{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
-      .admin-nav button{padding:10px 15px;border-radius:6px;border:0;cursor:pointer}
-      .btn-primary{background:#1f6feb;color:#fff}
-      .btn-muted{background:#eee;color:#333}
+        #dashboard { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem; }
+        .header a { color: #888; text-decoration: none; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin-bottom: 2rem; }
+        .card { background: var(--panel); padding: 2rem; border-radius: 8px; border: 1px solid #222; }
+        .card h2 { color: var(--accent); margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 1.2rem; }
+        
+        input, select, textarea { width: 100%; padding: 10px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; }
+        button { background: var(--accent); color: white; border: none; padding: 12px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #c53030; }
+        
+        .btn-theme { width: 100%; margin-bottom: 8px; background: #333; font-size: 0.9rem; }
+        .btn-theme:hover { background: #555; }
 
-      .section{background:var(--card);padding:15px;border-radius:8px;margin-bottom:20px}
-      .section h2{margin:0 0 8px;font-size:16px}
-      .form-row{display:flex;gap:12px;align-items:center;margin:10px 0}
-      .form-row label{min-width:160px;font-weight:600}
-      input[type="text"], input[type="number"], select, textarea{
-        padding:8px;border-radius:6px;border:1px solid #ddd;flex:1;max-width:100%
-      }
-      textarea{min-height:80px}
-      .controls{display:flex;gap:8px;flex-wrap:wrap}
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .stat-box { background: #222; padding: 15px; border-radius: 6px; text-align: center; }
+        .stat-box span { display: block; font-size: 2rem; font-weight: bold; color: var(--gold); }
+        .stat-box p { margin: 0; font-size: 0.8rem; color: #aaa; text-transform: uppercase; }
+        .math-result { background: #1a1a1a; padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 0.9rem; color: #ccc; border-left: 3px solid var(--accent); }
 
-      footer{margin-top:30px;color:var(--muted);font-size:14px}
+        .history-section { background: var(--panel); padding: 2rem; border-radius: 8px; border: 1px solid #222; margin-top: 2rem; }
+        .history-item { background: #1a1a1a; padding: 12px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #666; }
+        .history-actions { display: flex; gap: 5px; }
+        .history-actions button { padding: 6px 10px; font-size: 0.8rem; }
     </style>
-  </head>
+</head>
+<body>
 
-  <body class="doc-content">
-    <header class="admin-head">
-      <h1>Panel de Administración</h1>
-      <p>Panel de control — gestión de contenidos, encuestas, debates y configuración del sitio.</p>
-    </header>
+    <div id="login-screen">
+        <div class="login-box">
+            <h1 style="color: var(--accent);">ADMINISTRACIÓN FYM</h1>
+            <input type="password" id="admin-pass" placeholder="Contraseña">
+            <button id="btn-login">ENTRAR</button>
+            <p class="error-msg" id="error-msg">Contraseña incorrecta.</p>
+            <a href="index.html" style="color: #666; display: block; margin-top: 20px; font-size: 0.8rem;">&larr; Volver</a>
+        </div>
+    </div>
 
-    <nav class="admin-nav">
-      <button class="btn-primary" data-target="panel-estado">Panel Estado</button>
-      <button class="btn-muted" data-target="config-contenido">Config Contenido</button>
-      <button class="btn-muted" data-target="encuestas">Encuestas</button>
-      <button class="btn-muted" data-target="debates">Debates</button>
-      <button class="btn-muted" data-target="publicar">Publicar</button>
-    </nav>
+    <div id="dashboard">
+        <div class="header">
+            <h1>Panel de Control <span style="color: var(--accent);">FYM</span></h1>
+            <a href="index.html">&larr; Ver web pública</a>
+        </div>
 
-    <main>
-      <section id="panel-estado" class="section">
-        <h2>Estado del Panel</h2>
-        <p>Visitas totales: <strong>—</strong></p>
-        <div class="form-row">
-          <label for="visitas-totales">Visitas totales</label>
-          <input id="visitas-totales" type="number" placeholder="0" />
-        </div>
-        <div class="controls">
-          <button class="btn-primary">Actualizar</button>
-          <button class="btn-muted">Restaurar por defecto</button>
-        </div>
-      </section>
+        <div class="grid">
+            
+            <!-- ALERTAS -->
+            <div class="card">
+                <h2>🚨 Mensaje Global (Banner)</h2>
+                <input type="text" id="alert-text" placeholder="Ej: ¡Último vídeo subido! Toca aquí.">
+                <input type="text" id="alert-link" placeholder="URL opcional">
+                <button id="btn-publicar-alerta" style="width: 100%; background: #e67e22; margin-bottom: 10px;">Activar Banner</button>
+                <button id="btn-quitar-alerta" style="width: 100%; background: #333;">Ocultar Banner</button>
+            </div>
 
-      <section id="config-contenido" class="section">
-        <h2>Configuración de Contenido</h2>
-        <div class="form-row">
-          <label for="seccion-activa">Sección activa</label>
-          <select id="seccion-activa">
-            <option value="home">Inicio</option>
-            <option value="noticias">Noticias</option>
-            <option value="debates">Debates</option>
-            <option value="encuestas">Encuestas</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label for="publicar-delay">Delay de publicación (seg)</label>
-          <input id="publicar-delay" type="number" min="0" value="0" />
-        </div>
-        <div class="form-row">
-          <label for="cont-estado">Contenido destacado</label>
-          <input id="cont-estado" type="text" placeholder="Título o resumen" />
-        </div>
-        <div class="controls">
-          <button class="btn-primary">Guardar configuración</button>
-          <button class="btn-muted">Cancelar</button>
-        </div>
-      </section>
+            <!-- ANALÍTICA -->
+            <div class="card">
+                <h2>📊 Analítica Rápida</h2>
+                <div class="stats-grid">
+                    <div class="stat-box"><span id="admin-visitas">0</span><p>Visitas</p></div>
+                    <div class="stat-box"><span id="admin-clicks">0</span><p>Clics WA</p></div>
+                </div>
+                <input type="number" id="input-seguidores" placeholder="Seguidores actuales" style="margin-top:15px;">
+                <button id="btn-guardar-seguidores" style="width: 100%;">Actualizar Métricas</button>
+                <div class="math-result" id="calc-conversion">Esperando...</div>
+            </div>
 
-      <section id="encuestas" class="section">
-        <h2>Encuestas</h2>
-        <div class="form-row">
-          <label for="encuesta-titulo">Título</label>
-          <input id="encuesta-titulo" type="text" placeholder="Título de la encuesta" />
-        </div>
-        <div class="form-row">
-          <label for="encuesta-opciones">Opciones (separadas por comas)</label>
-          <input id="encuesta-opciones" type="text" placeholder="Sí,No,Tal vez" />
-        </div>
-        <div class="controls">
-          <button class="btn-primary">Crear encuesta</button>
-          <button class="btn-muted">Ver historial</button>
-        </div>
-      </section>
+            <!-- SOCIOS -->
+            <div class="card">
+                <h2>🏆 Alta/Baja de Socios</h2>
+                <input type="number" id="socio-num" placeholder="Nº de Carnet (1 al 10)" min="1" max="10">
+                <input type="text" id="socio-name" placeholder="Nombre del Socio">
+                <select id="socio-status">
+                    <option value="active">🟢 Activo / Ocupado</option>
+                    <option value="locked">🔴 Vacante / Bloqueado</option>
+                </select>
+                <button id="btn-guardar-socio" style="width: 100%; background: var(--gold); color: #000;">Guardar Carnet</button>
+            </div>
 
-      <section id="debates" class="section">
-        <h2>Debates</h2>
-        <div class="form-row">
-          <label for="debate-titulo">Título</label>
-          <input id="debate-titulo" type="text" placeholder="Título del debate" />
-        </div>
-        <div class="form-row">
-          <label for="debate-contenido">Contenido</label>
-          <textarea id="debate-contenido" placeholder="Escribe el cuerpo del debate..."></textarea>
-        </div>
-        <div class="controls">
-          <button class="btn-primary">Publicar debate</button>
-          <button class="btn-muted">Historial de debates</button>
-        </div>
-      </section>
+            <!-- CUESTIONARIO -->
+            <div class="card">
+                <h2>📝 Crear Cuestionario</h2>
+                <input type="text" id="quiz-question" placeholder="Pregunta">
+                <input type="text" id="quiz-opt1" placeholder="Opción 1">
+                <input type="text" id="quiz-opt2" placeholder="Opción 2">
+                <input type="text" id="quiz-opt3" placeholder="Opción 3 (Opcional)">
+                <input type="text" id="quiz-opt4" placeholder="Opción 4 (Opcional)">
+                <button id="btn-publicar-quiz" style="width: 100%; background: #2b6cb0;">Lanzar Encuesta</button>
+            </div>
 
-      <section id="cuentas" class="section">
-        <h2>Seguridad y Cuentas</h2>
-        <div class="form-row">
-          <label for="usuario">Usuario</label>
-          <input id="usuario" type="text" placeholder="admin" />
-        </div>
-        <div class="form-row">
-          <label for="nueva-clave">Cambiar contraseña</label>
-          <input id="nueva-clave" type="password" placeholder="Nueva contraseña" />
-        </div>
-        <div class="controls">
-          <button class="btn-primary">Guardar contraseña</button>
-        </div>
-      </section>
+            <!-- TEMAS -->
+            <div class="card">
+                <h2>🎨 Apariencia Inteligente</h2>
+                <button class="btn-theme" id="btn-tema-auto" style="border-left: 5px solid #25D366; background: #1a5c32; color:white;">🤖 MODO AUTOMÁTICO</button>
+                <hr style="border-color: #333; margin: 15px 0;">
+                <button class="btn-theme" id="btn-tema-oscuro" style="border-left: 5px solid #000;">Oscuro (Defecto)</button>
+                <button class="btn-theme" id="btn-tema-claro" style="border-left: 5px solid #fff; color: #000; background: #ccc;">Claro</button>
+                <button class="btn-theme" id="btn-tema-match" style="border-left: 5px solid #ffcc00;">Día de Partido</button>
+                <button class="btn-theme" id="btn-tema-champions" style="border-left: 5px solid #00ccff; background: #002952;">Champions</button>
+                <button class="btn-theme" id="btn-tema-mundial" style="border-left: 5px solid #ffcc00; background: #660000;">Mundial</button>
+            </div>
 
-    </main>
+            <!-- PARTIDOS API -->
+            <div class="card">
+                <h2>⚽ Fijar Partido (API)</h2>
+                <button id="btn-fetch-api" style="width: 100%; background: #25D366;">Cargar Próximos Partidos</button>
+                <div id="lista-partidos-api" style="margin-top: 15px; max-height: 250px; overflow-y: auto;"></div>
+            </div>
 
-    <footer>
-      <p>Panel generado — Futbol y Mas</p>
-    </footer>
-  </body>
+            <!-- DEBATES -->
+            <div class="card">
+                <h2>📰 Lanzar Debate</h2>
+                <input type="text" id="news-cat" placeholder="Categoría (Ej: DEBATE)">
+                <input type="text" id="news-title" placeholder="Titular">
+                <textarea id="news-desc" rows="3" placeholder="Desarrollo..."></textarea>
+                <button id="btn-publicar-news" style="width: 100%;">Publicar en la Web</button>
+            </div>
+
+        </div>
+
+        <!-- HISTORIAL DE GESTIÓN (NUEVO) -->
+        <div class="history-section">
+            <h2 style="color: var(--accent); margin-top:0;">📚 Historial y Gestión de Contenido</h2>
+            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">Reutiliza elementos antiguos guardados o quítalos de la web para mantenerla limpia.</p>
+            
+            <h3 style="font-size: 1rem; color: var(--gold); border-bottom: 1px solid #333; padding-bottom: 5px;">Encuestas / Cuestionarios Anteriores</h3>
+            <div id="historial-encuestas" style="margin-bottom: 20px;"><p style="color:#666; font-size:0.85rem;">Cargando historial...</p></div>
+
+            <h3 style="font-size: 1rem; color: var(--gold); border-bottom: 1px solid #333; padding-bottom: 5px;">Debates Publicados</h3>
+            <div id="historial-debates"><p style="color:#666; font-size:0.85rem;">Cargando historial...</p></div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        const CLAVE_SECRETA = "FYM2026"; 
+        document.getElementById('btn-login').addEventListener('click', () => {
+            if(document.getElementById('admin-pass').value === CLAVE_SECRETA) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.src = 'main.js';
+                document.body.appendChild(script);
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        });
+    </script>
+</body>
 </html>
