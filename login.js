@@ -2,13 +2,13 @@
 // CONFIGURACIÓN DE FIREBASE
 // ==========================================
 const firebaseConfig = {
-    apiKey: "TU_API_KEY",
-    authDomain: "TU_PROYECTO.firebaseapp.com",
-    databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com",
-    projectId: "TU_PROYECTO",
-    storageBucket: "TU_PROYECTO.appspot.com",
-    messagingSenderId: "TU_SENDER_ID",
-    appId: "TU_APP_ID"
+    apiKey: "AIzaSyDGxLmQDmohUivV1XxIsLIWAvDATLRROgE",
+    authDomain: "fuego-en-la-isla.firebaseapp.com",
+    databaseURL: "https://fuego-en-la-isla-default-rtdb.firebaseio.com",
+    projectId: "fuego-en-la-isla",
+    storageBucket: "fuego-en-la-isla.firebasestorage.app",
+    messagingSenderId: "837575806373",
+    appId: "1:837575806373:web:d823ec3986cfee375cec4c"
 };
 
 // Inicializar Firebase si aún no está inicializado
