@@ -582,3 +582,116 @@ if (adminVotosContainer) {
         }
     });
 }
+
+// ==========================================
+// FUNCIÓN PARA REGISTRAR UN VOTO (1 VOTO POR USUARIO)
+// ==========================================
+async function votar(idEncuesta, idOpcion) {
+    const user = firebase.auth().currentUser;
+
+    // 1. Verificar si el usuario está logueado
+    if (!user) {
+        showToast('Debes iniciar sesión para poder votar.', 'error');
+        // Opcional: Redirigir al login
+        // window.location.href = 'login.html';
+        return;
+    }
+
+    const uid = user.uid;
+    const votoRef = firebase.database().ref(`votos/${idEncuesta}/${uid}`);
+    const encuestaRef = firebase.database().ref(`encuestas/${idEncuesta}/opciones/${idOpcion}/votos`);
+
+    try {
+        // 2. Comprobar si el usuario YA ha votado en esta encuesta
+        const snapshot = await votoRef.once('value');
+
+        if (snapshot.exists()) {
+            showToast('¡Ya has registrado tu voto en esta encuesta!', 'error');
+            return;
+        }
+
+        // 3. Si no ha votado, guardar su voto utilizando una transacción segura
+        await votoRef.set(idOpcion); // Registra que este UID ya votó
+        
+        // Incrementar el contador de votos de la opción seleccionada de forma atómica
+        await encuestaRef.transaction((votosActuales) => {
+            return (votosActuales || 0) + 1;
+        });
+
+        showToast('¡Tu voto ha sido registrado con éxito!', 'success');
+        
+        // 4. Actualizar la interfaz en pantalla
+        cargarEstadoVotos(idEncuesta);
+
+    } catch (error) {
+        console.error("Error al registrar voto:", error);
+        showToast('Hubo un error al procesar tu voto.', 'error');
+    }
+}
+
+// ==========================================
+// CARGAR Y MOSTRAR RESULTADOS
+// ==========================================
+function escucharResultadosEncuesta(idEncuesta) {
+    const user = firebase.auth().currentUser;
+    const encuestaRef = firebase.database().ref(`encuestas/${idEncuesta}`);
+    const votoUserRef = user ? firebase.database().ref(`votos/${idEncuesta}/${user.uid}`) : null;
+
+    // Escuchar cambios en tiempo real
+    encuestaRef.on('value', async (snapshot) => {
+        const datosEncuesta = snapshot.val();
+        if (!datosEncuesta) return;
+
+        let yaVoto = false;
+        let opcionVotada = null;
+
+        if (user) {
+            const userVotoSnap = await firebase.database().ref(`votos/${idEncuesta}/${user.uid}`).once('value');
+            if (userVotoSnap.exists()) {
+                yaVoto = true;
+                opcionVotada = userVotoSnap.val();
+            }
+        }
+
+        renderizarEncuestaUI(idEncuesta, datosEncuesta, yaVoto, opcionVotada);
+    });
+}
+
+// Renderizar HTML dinámicamente según si ya votó o no
+function renderizarEncuestaUI(idEncuesta, datos, yaVoto, opcionVotada) {
+    const contenedor = document.getElementById(`encuesta-${idEncuesta}`);
+    if (!contenedor) return;
+
+    let html = `<h3>${datos.titulo}</h3><div class="quiz-options">`;
+
+    // Calcular el total de votos
+    let totalVotos = 0;
+    Object.values(datos.opciones).forEach(op => totalVotos += (op.votos || 0));
+
+    // Generar botones u opciones con porcentaje
+    for (const [keyOp, opcion] of Object.entries(datos.opciones)) {
+        const votos = opcion.votos || 0;
+        const porcentaje = totalVotos > 0 ? Math.round((votos / totalVotos) * 100) : 0;
+        
+        if (yaVoto) {
+            // Si YA votó: Mostramos barras de porcentaje deshabilitadas
+            const esLaSeleccionada = (keyOp === opcionVotada) ? ' (Tu voto)' : '';
+            html += `
+                <div class="btn-quiz-option" style="background: linear-gradient(90deg, var(--accent) ${porcentaje}%, var(--panel-bg) ${porcentaje}%); opacity: 0.9; cursor: default;">
+                    <span>${opcion.texto} ${esLaSeleccionada}</span>
+                    <strong style="float: right;">${porcentaje}% (${votos})</strong>
+                </div>
+            `;
+        } else {
+            // Si NO ha votado: Mostramos botones ejecutables
+            html += `
+                <button class="btn-quiz-option" onclick="votar('${idEncuesta}', '${keyOp}')">
+                    ${opcion.texto}
+                </button>
+            `;
+        }
+    }
+
+    html += `</div><p style="margin-top:10px; font-size:0.85rem; color:var(--text-muted);">Total de votos: ${totalVotos}</p>`;
+    contenedor.innerHTML = html;
+}
