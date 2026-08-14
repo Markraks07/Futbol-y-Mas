@@ -103,6 +103,136 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// ==========================================
+// 2. GESTIÓN DE NOTICIAS (ÚLTIMA NOTICIA + VER TODAS)
+// ==========================================
+function cargarNoticias() {
+    const destacadaContainer = document.getElementById('noticia-destacada-container');
+    const listaTodasContainer = document.getElementById('lista-todas-noticias');
+    const btnVerTodas = document.getElementById('btn-ver-todas-noticias');
+
+    if (!destacadaContainer) return;
+
+    const noticiasRef = ref(db, 'noticias');
+    
+    onValue(noticiasRef, (snapshot) => {
+        if (!snapshot.exists()) {
+            destacadaContainer.innerHTML = '<p class="no-data">No hay noticias publicadas aún.</p>';
+            return;
+        }
+
+        const data = snapshot.val();
+        // Convertimos a array y ordenamos por fecha (de más reciente a más antigua)
+        const listaNoticias = Object.keys(data).map(key => ({
+            id: key,
+            ...data[key]
+        })).reverse();
+
+        // 1. PINTAR ÚLTIMA NOTICIA (index 0)
+        const ultimaNoticia = listaNoticias[0];
+        destacadaContainer.innerHTML = renderCardNoticia(ultimaNoticia, true);
+
+        // 2. PREPARAR EL HISTORIAL DE NOTICIAS RESTANTES
+        if (listaNoticias.length > 1 && listaTodasContainer) {
+            listaTodasContainer.innerHTML = listaNoticias.slice(1).map(noticia => renderCardNoticia(noticia, false)).join('');
+        } else if (btnVerTodas) {
+            btnVerTodas.style.display = 'none'; // Si solo hay 1 noticia, ocultamos el botón
+        }
+    });
+
+    // Evento para desplegar todas las noticias
+    if (btnVerTodas) {
+        btnVerTodas.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (listaTodasContainer) {
+                const isHidden = listaTodasContainer.style.display === 'none';
+                listaTodasContainer.style.display = isHidden ? 'grid' : 'none';
+                btnVerTodas.innerText = isHidden ? '← Ocultar noticias anteriores' : 'Ver todas las noticias →';
+            }
+        });
+    }
+}
+
+// Plantilla HTML para tarjetas de noticias
+function renderCardNoticia(noticia, esPrincipal = false) {
+    return `
+        <article class="noticia-card ${esPrincipal ? 'destacada' : ''}">
+            ${noticia.imagen ? `<img src="${noticia.imagen}" alt="${noticia.titulo}" class="noticia-img">` : ''}
+            <div class="noticia-content">
+                <span class="noticia-fecha">${noticia.fecha || 'Reciente'}</span>
+                <h3>${noticia.titulo}</h3>
+                <p>${noticia.resumen || noticia.contenido.substring(0, 120) + '...'}</p>
+                <button class="btn-action" onclick="abrirNoticiaModal('${noticia.id}')">
+                    Leer y Comentar 💬
+                </button>
+            </div>
+        </article>
+    `;
+}
+
+// ==========================================
+// 3. GESTIÓN DE CUESTIONARIOS / PORRAS (ÚLTIMO ACTIVO)
+// ==========================================
+function escucharZonaInteractiva(currentUser) {
+    const partidoContainer = document.getElementById('partido-container');
+    const listaHistorialContainer = document.getElementById('lista-todos-cuestionarios');
+    const btnVerTodos = document.getElementById('btn-ver-todos-cuestionarios');
+
+    if (!partidoContainer) return;
+
+    // Escuchar el cuestionario activo
+    const activoRef = ref(db, 'cuestionario_activo');
+    onValue(activoRef, async (snapshot) => {
+        if (!snapshot.exists()) {
+            partidoContainer.innerHTML = '<p class="no-data">No hay encuestas o porras activas en este momento.</p>';
+            return;
+        }
+
+        const cuestionario = snapshot.val();
+        
+        // Renderizamos la porra/encuesta principal
+        await renderCuestionarioPrincipal(cuestionario, currentUser, partidoContainer);
+    });
+
+    // Evento para toggle de historial de cuestionarios
+    if (btnVerTodos) {
+        btnVerTodos.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (listaHistorialContainer) {
+                const isHidden = listaHistorialContainer.style.display === 'none';
+                
+                if (isHidden) {
+                    // Cargar historial desde Firebase la primera vez
+                    await cargarHistorialCuestionarios(listaHistorialContainer, currentUser);
+                }
+                
+                listaHistorialContainer.style.display = isHidden ? 'block' : 'none';
+                btnVerTodos.innerText = isHidden ? '← Ocultar encuestas anteriores' : 'Ver encuestas anteriores →';
+            }
+        });
+    }
+}
+
+// Función auxiliar para cargar el historial antiguo de Firebase
+async function cargarHistorialCuestionarios(container, user) {
+    const historialRef = ref(db, 'cuestionarios_anteriores');
+    const snap = await get(historialRef);
+
+    if (!snap.exists()) {
+        container.innerHTML = '<p style="text-align:center; color: var(--text-muted);">No hay encuestas pasadas registrados.</p>';
+        return;
+    }
+
+    const data = snap.val();
+    const lista = Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse();
+
+    container.innerHTML = lista.map(c => `
+        <div class="cuestionario-pasado-item" style="padding: 12px; background: rgba(255,255,255,0.05); margin-bottom: 10px; border-radius: 8px;">
+            <h4>${c.pregunta}</h4>
+            <small>Finalizado - Total votos: ${c.totalVotos || 0}</small>
+        </div>
+    `).join('');
+}
 
 
 
