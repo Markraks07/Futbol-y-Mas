@@ -1,5 +1,21 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, set, push, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { 
+    getDatabase, 
+    ref, 
+    onValue, 
+    set, 
+    push, 
+    get, 
+    remove, 
+    runTransaction 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { 
+    getAuth, 
+    onAuthStateChanged, 
+    signOut, 
+    GoogleAuthProvider, 
+    signInWithPopup 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDGxLmQDmohUivV1XxIsLIWAvDATLRROgE",
@@ -11,19 +27,58 @@ const firebaseConfig = {
     appId: "1:837575806373:web:d823ec3986cfee375cec4c"
 };
 
+// Inicializar Firebase, Database y Auth
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 
-// 1. MENU Y METRICAS
+// Helper para notificaciones simples
+function showToast(mensaje) {
+    alert(mensaje);
+}
+
+// ==========================================
+// 1. GESTIÓN DE SESIÓN Y NAVBAR
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
+    // Menú Hamburguesa
     const hamburgerBtn = document.getElementById('hamburger-btn');
     const navLinks = document.getElementById('nav-links');
     if (hamburgerBtn && navLinks) {
         hamburgerBtn.addEventListener('click', (e) => { e.preventDefault(); navLinks.classList.toggle('active'); });
         navLinks.querySelectorAll('a').forEach(link => { link.addEventListener('click', () => navLinks.classList.remove('active')); });
     }
+
+    // Escuchar el estado de autenticación de Firebase
+    onAuthStateChanged(auth, (user) => {
+        const authZone = document.getElementById('user-auth-zone');
+        if (authZone) {
+            if (user) {
+                const name = user.displayName || 'Aficionado';
+                authZone.innerHTML = `
+                    <span style="color: var(--text-main); font-weight: bold; margin-right: 10px; font-size: 0.9rem;">
+                        ⚽ ${name}
+                    </span>
+                    <button id="btn-logout" class="toggle-comments-btn" style="color: var(--accent); font-size: 0.85rem; margin:0;">
+                        (Salir)
+                    </button>
+                `;
+                document.getElementById('btn-logout')?.addEventListener('click', () => signOut(auth));
+            } else {
+                authZone.innerHTML = `
+                    <a href="login.html" class="btn-action" style="padding: 6px 14px; font-size: 0.85rem; text-decoration: none;">
+                        Iniciar Sesión
+                    </a>
+                `;
+            }
+        }
+        
+        // Escuchar o recargar las encuestas según la sesión del usuario
+        escucharZonaInteractiva(user);
+    });
 });
 
+// Métricas de Visitas y Clicks
 if (document.getElementById('news-container')) {
     const visitasRef = ref(db, 'estadisticas/visitas');
     get(visitasRef).then((snapshot) => set(visitasRef, (snapshot.val() || 0) + 1));
@@ -36,24 +91,28 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// ==========================================
 // 2. ALERTAS (BANNER GLOBAL)
+// ==========================================
 const alertBanner = document.getElementById('alert-banner');
-if(alertBanner) {
+if (alertBanner) {
     onValue(ref(db, 'configuracion/alerta'), (snapshot) => {
         const al = snapshot.val();
-        if(al && al.activa) {
+        if (al && al.activa) {
             alertBanner.style.display = 'block';
             const alertTextEl = document.getElementById('alert-banner-text');
-            if(alertTextEl) alertTextEl.innerText = al.texto;
+            if (alertTextEl) alertTextEl.innerText = al.texto;
             alertBanner.href = al.link || '#';
-            if(!al.link) alertBanner.removeAttribute('target');
+            if (!al.link) alertBanner.removeAttribute('target');
         } else {
             alertBanner.style.display = 'none';
         }
     });
 }
 
-// 3. SOCIOS VIP
+// ==========================================
+// 3. SOCIOS VIP (CLUB DE LOS 10)
+// ==========================================
 const carnetsContainer = document.getElementById('carnets-container');
 if (carnetsContainer) {
     onValue(ref(db, 'socios'), (snapshot) => {
@@ -72,7 +131,9 @@ if (carnetsContainer) {
     });
 }
 
-// 4. TEMAS
+// ==========================================
+// 4. TEMAS DE COLOR DINÁMICOS
+// ==========================================
 onValue(ref(db, 'configuracion/tema_actual'), (snapshot) => {
     const tema = snapshot.val() || 'dark';
     const root = document.documentElement;
@@ -94,21 +155,18 @@ onValue(ref(db, 'configuracion/tema_actual'), (snapshot) => {
         root.style.setProperty('--card-bg', '#ffffff');
         root.style.setProperty('--card-border', '#cbd5e0');
         root.style.setProperty('--nav-bg', '#ffffff');
-    } 
-    else if (tema === 'matchday') {
+    } else if (tema === 'matchday') {
         root.style.setProperty('--bg-color', '#1a0505'); 
         root.style.setProperty('--panel-bg', '#2a0a0a');
         root.style.setProperty('--card-bg', '#1c0707');
         root.style.setProperty('--accent', '#ffcc00'); 
-    }
-    else if (tema === 'champions') {
+    } else if (tema === 'champions') {
         root.style.setProperty('--bg-color', '#000c24'); 
         root.style.setProperty('--panel-bg', '#00163b');
         root.style.setProperty('--card-bg', '#001f4d');
         root.style.setProperty('--card-border', '#003366');
         root.style.setProperty('--accent', '#00ccff'); 
-    }
-    else if (tema === 'mundial') {
+    } else if (tema === 'mundial') {
         root.style.setProperty('--bg-color', '#240000'); 
         root.style.setProperty('--panel-bg', '#3b0000');
         root.style.setProperty('--card-bg', '#4d0000');
@@ -117,59 +175,138 @@ onValue(ref(db, 'configuracion/tema_actual'), (snapshot) => {
     }
 });
 
-// 5. ZONA INTERACTIVA (PARTIDOS / CUESTIONARIOS)
-const partidoContainer = document.getElementById('partido-container');
-const tituloInteractivo = document.getElementById('panel-interactivo-titulo');
-if (partidoContainer) {
+// ==========================================
+// 5. ZONA INTERACTIVA Y VOTACIÓN (1 VOTO POR USUARIO)
+// ==========================================
+function escucharZonaInteractiva(currentUser) {
+    const partidoContainer = document.getElementById('partido-container');
+    const tituloInteractivo = document.getElementById('panel-interactivo-titulo');
+    if (!partidoContainer) return;
+
     onValue(ref(db, 'partido_actual'), (snapshot) => {
         const data = snapshot.val();
         if (data && data.equipoLocal) {
-            if(tituloInteractivo) tituloInteractivo.innerText = "🔥 LA PORRA DE LA SEMANA";
+            if (tituloInteractivo) tituloInteractivo.innerText = "🔥 LA PORRA DE LA SEMANA";
             partidoContainer.innerHTML = `
                 <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; text-transform: uppercase;">${data.competicion || 'AMISTOSO'}</div>
                 <span style="color: var(--text-main); font-size: 1.5rem; font-weight: bold;">${data.equipoLocal}</span> 
                 <span style="color: var(--accent); margin: 0 10px; font-size: 1.5rem;">VS</span> 
                 <span style="color: var(--text-main); font-size: 1.5rem; font-weight: bold;">${data.equipoVisitante}</span>
-                <a href="URL_DE_TU_WHATSAPP" target="_blank" class="btn-action track-wa" style="margin-top:20px;">Dejar mi predicción en WhatsApp</a>
+                <br>
+                <a href="URL_DE_TU_WHATSAPP" target="_blank" class="btn-action track-wa" style="margin-top:20px; display:inline-block;">Dejar mi predicción en WhatsApp</a>
             `;
         } else {
-            onValue(ref(db, 'cuestionario_activo'), (quizSnap) => {
+            // Cargar Cuestionario Activo con control de 1 voto por UID
+            onValue(ref(db, 'cuestionario_activo'), async (quizSnap) => {
                 const qData = quizSnap.val();
-                if (qData) {
-                    if(tituloInteractivo) tituloInteractivo.innerText = "📝 CUESTIONARIO ACTIVO";
-                    let opcionesHTML = '';
-                    qData.opciones.forEach((opt, index) => {
-                        if(opt) {
-                            opcionesHTML += `<button class="btn-quiz-option" data-index="${index}">${opt}</button>`;
-                        }
-                    });
-                    partidoContainer.innerHTML = `
-                        <h3 style="font-size: 1.3rem; margin-bottom: 15px; color: var(--text-main);">${qData.pregunta}</h3>
-                        <div class="quiz-options">${opcionesHTML}</div>
-                        <div id="quiz-resultado" style="margin-top: 15px; font-size: 0.9rem; color: var(--gold);"></div>
-                    `;
-
-                    partidoContainer.querySelectorAll('.btn-quiz-option').forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            const idx = e.currentTarget.getAttribute('data-index');
-                            const votoRef = ref(db, `cuestionario_activo/votos/${idx}`);
-                            get(votoRef).then(vSnap => {
-                                const actuales = vSnap.val() || 0;
-                                set(votoRef, actuales + 1);
-                                document.getElementById('quiz-resultado').innerText = "¡Voto registrado con éxito!";
-                            });
-                        });
-                    });
-                } else {
-                    if(tituloInteractivo) tituloInteractivo.innerText = "🔥 ZONA DE PARTICIPACIÓN";
+                if (!qData) {
+                    if (tituloInteractivo) tituloInteractivo.innerText = "🔥 ZONA DE PARTICIPACIÓN";
                     partidoContainer.innerHTML = `<p style="color: var(--text-muted);">No hay partidos ni encuestas activas ahora mismo.</p>`;
+                    return;
                 }
+
+                if (tituloInteractivo) tituloInteractivo.innerText = "📝 CUESTIONARIO ACTIVO";
+
+                let yaVoto = false;
+                let opcionVotada = null;
+
+                // Verificar si el usuario ya votó en la BD
+                if (currentUser) {
+                    const userVotoSnap = await get(ref(db, `cuestionario_activo/votos_usuarios/${currentUser.uid}`));
+                    if (userVotoSnap.exists()) {
+                        yaVoto = true;
+                        opcionVotada = userVotoSnap.val();
+                    }
+                }
+
+                // Calcular total de votos
+                let totalVotos = 0;
+                if (qData.votos) {
+                    Object.values(qData.votos).forEach(v => totalVotos += (v || 0));
+                }
+
+                let opcionesHTML = '';
+                qData.opciones.forEach((opt, index) => {
+                    if (!opt) return;
+                    const votosOpcion = (qData.votos && qData.votos[index]) ? qData.votos[index] : 0;
+                    const porcentaje = totalVotos > 0 ? Math.round((votosOpcion / totalVotos) * 100) : 0;
+
+                    if (yaVoto) {
+                        const esLaSeleccionada = (index == opcionVotada) ? ' 🌟 (Tu voto)' : '';
+                        opcionesHTML += `
+                            <div class="btn-quiz-option" style="background: linear-gradient(90deg, var(--accent) ${porcentaje}%, var(--panel-bg) ${porcentaje}%); opacity: 0.9; cursor: default; margin-bottom: 8px;">
+                                <span>${opt} ${esLaSeleccionada}</span>
+                                <strong style="float: right;">${porcentaje}% (${votosOpcion})</strong>
+                            </div>
+                        `;
+                    } else if (currentUser) {
+                        opcionesHTML += `
+                            <button class="btn-quiz-option btn-votar" data-index="${index}" style="margin-bottom: 8px;">
+                                ${opt}
+                            </button>
+                        `;
+                    } else {
+                        opcionesHTML += `
+                            <button class="btn-quiz-option" style="opacity: 0.7; margin-bottom: 8px;" onclick="window.location.href='login.html'">
+                                ${opt} (Inicia sesión para votar)
+                            </button>
+                        `;
+                    }
+                });
+
+                partidoContainer.innerHTML = `
+                    <h3 style="font-size: 1.3rem; margin-bottom: 15px; color: var(--text-main);">${qData.pregunta}</h3>
+                    <div class="quiz-options">${opcionesHTML}</div>
+                    <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">Total de votos: <strong>${totalVotos}</strong></div>
+                `;
+
+                // Eventos de clic para los botones de votación
+                partidoContainer.querySelectorAll('.btn-votar').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const idx = e.currentTarget.getAttribute('data-index');
+                        await ejecutarVoto(currentUser, idx);
+                    });
+                });
             });
         }
     });
 }
 
-// 6. DEBATES CON COMENTARIOS OCULTOS ("VER COMENTARIOS")
+// Función transaccional para ejecutar el voto de forma segura
+async function ejecutarVoto(user, opcionIdx) {
+    if (!user) {
+        showToast("Debes iniciar sesión para votar.");
+        return;
+    }
+
+    const userVotoRef = ref(db, `cuestionario_activo/votos_usuarios/${user.uid}`);
+    const contadorVotoRef = ref(db, `cuestionario_activo/votos/${opcionIdx}`);
+
+    try {
+        const snap = await get(userVotoRef);
+        if (snap.exists()) {
+            showToast("Ya has votado en esta encuesta.");
+            return;
+        }
+
+        // Marcar que el usuario votó
+        await set(userVotoRef, opcionIdx);
+
+        // Incrementar el contador de forma atómica
+        await runTransaction(contadorVotoRef, (votosActuales) => {
+            return (votosActuales || 0) + 1;
+        });
+
+        showToast("¡Voto registrado con éxito!");
+    } catch (error) {
+        console.error("Error al votar:", error);
+        showToast("Hubo un error al guardar tu voto.");
+    }
+}
+
+// ==========================================
+// 6. DEBATES Y COMENTARIOS
+// ==========================================
 const newsContainer = document.getElementById('news-container');
 if (newsContainer) {
     onValue(ref(db, 'noticias'), (snapshot) => {
@@ -181,10 +318,10 @@ if (newsContainer) {
                 
                 let comentariosHTML = '';
                 let totalComentarios = 0;
-                if(n.comentarios) {
+                if (n.comentarios) {
                     totalComentarios = Object.values(n.comentarios).length;
                     Object.values(n.comentarios).forEach(c => {
-                        comentariosHTML += `<div class="comment-item"><strong>${c.autor}</strong> ${c.texto}</div>`;
+                        comentariosHTML += `<div class="comment-item"><strong>${c.autor}:</strong> ${c.texto}</div>`;
                     });
                 } else {
                     comentariosHTML = `<div style="font-size: 0.8rem; color: var(--text-muted);">Sé el primero en opinar.</div>`;
@@ -200,10 +337,10 @@ if (newsContainer) {
                         
                         <div class="comments-dropdown" id="dropdown-${key}">
                             <div class="comments-list">${comentariosHTML}</div>
-                            <div class="comment-form">
-                                <input type="text" id="author-${key}" placeholder="Nombre">
-                                <input type="text" id="text-${key}" placeholder="Opinión...">
-                                <button class="btn-enviar-comentario" data-id="${key}">Enviar</button>
+                            <div class="comment-form" style="display:flex; gap: 5px; margin-top: 10px;">
+                                <input type="text" id="author-${key}" placeholder="Nombre" style="width:30%;">
+                                <input type="text" id="text-${key}" placeholder="Opinión..." style="width:70%;">
+                                <button class="btn-enviar-comentario btn-action" data-id="${key}">Enviar</button>
                             </div>
                         </div>
                     </div>
@@ -214,7 +351,7 @@ if (newsContainer) {
                 btn.addEventListener('click', (e) => {
                     const id = e.currentTarget.getAttribute('data-id');
                     const dropdown = document.getElementById(`dropdown-${id}`);
-                    dropdown.classList.toggle('active');
+                    if (dropdown) dropdown.classList.toggle('active');
                 });
             });
 
@@ -226,7 +363,7 @@ if (newsContainer) {
                     const autor = autorInput.value.trim();
                     const texto = textoInput.value.trim();
 
-                    if(autor && texto) {
+                    if (autor && texto) {
                         push(ref(db, `noticias/${id}/comentarios`), { autor, texto }).then(() => {
                             autorInput.value = '';
                             textoInput.value = '';
@@ -242,30 +379,32 @@ if (newsContainer) {
     });
 }
 
-// 7. PANEL ADMIN & HISTORIAL DE CONTENIDO
+// ==========================================
+// 7. PANEL DE ADMINISTRACIÓN Y HISTORIAL
+// ==========================================
 const btnPubAlerta = document.getElementById('btn-publicar-alerta');
-if(btnPubAlerta) {
+if (btnPubAlerta) {
     btnPubAlerta.addEventListener('click', () => {
         const texto = document.getElementById('alert-text').value;
         const link = document.getElementById('alert-link').value;
-        if(texto) set(ref(db, 'configuracion/alerta'), { activa: true, texto, link });
+        if (texto) set(ref(db, 'configuracion/alerta'), { activa: true, texto, link });
     });
 }
 
 const btnQuitAlerta = document.getElementById('btn-quitar-alerta');
-if(btnQuitAlerta) {
+if (btnQuitAlerta) {
     btnQuitAlerta.addEventListener('click', () => {
         set(ref(db, 'configuracion/alerta/activa'), false);
     });
 }
 
 const btnGuarSocio = document.getElementById('btn-guardar-socio');
-if(btnGuarSocio) {
+if (btnGuarSocio) {
     btnGuarSocio.addEventListener('click', () => {
         const num = document.getElementById('socio-num').value;
         const nombre = document.getElementById('socio-name').value;
         const status = document.getElementById('socio-status').value;
-        if(num >= 1 && num <= 10 && nombre) {
+        if (num >= 1 && num <= 10 && nombre) {
             set(ref(db, 'socios/' + num), { nombre, status });
             alert(`Socio #${num} guardado.`);
             document.getElementById('socio-name').value = '';
@@ -274,7 +413,7 @@ if(btnGuarSocio) {
 }
 
 const btnPubQuiz = document.getElementById('btn-publicar-quiz');
-if(btnPubQuiz) {
+if (btnPubQuiz) {
     btnPubQuiz.addEventListener('click', () => {
         const pregunta = document.getElementById('quiz-question').value;
         const opt1 = document.getElementById('quiz-opt1').value;
@@ -282,7 +421,7 @@ if(btnPubQuiz) {
         const opt3 = document.getElementById('quiz-opt3').value;
         const opt4 = document.getElementById('quiz-opt4').value;
 
-        if(pregunta && opt1 && opt2) {
+        if (pregunta && opt1 && opt2) {
             const quizData = { pregunta, opciones: [opt1, opt2, opt3, opt4].filter(o => o !== "") };
             set(ref(db, 'cuestionario_activo'), quizData);
             push(ref(db, 'historial_encuestas'), quizData);
@@ -300,12 +439,12 @@ if(btnPubQuiz) {
 }
 
 const btnPubNews = document.getElementById('btn-publicar-news');
-if(btnPubNews) {
+if (btnPubNews) {
     btnPubNews.addEventListener('click', () => {
         const titulo = document.getElementById('news-title').value;
         const resumen = document.getElementById('news-desc').value;
         const categoria = document.getElementById('news-cat').value || 'DEBATE';
-        if(titulo && resumen) {
+        if (titulo && resumen) {
             const noticiaData = { categoria, titulo, resumen };
             push(ref(db, 'noticias'), noticiaData).then(() => { 
                 alert("¡Debate publicado con éxito!");
@@ -323,7 +462,7 @@ if (historialEncuestasDiv && historialDebatesDiv) {
     onValue(ref(db, 'historial_encuestas'), (snapshot) => {
         historialEncuestasDiv.innerHTML = '';
         const data = snapshot.val();
-        if(data) {
+        if (data) {
             Object.keys(data).forEach(key => {
                 const enc = data[key];
                 historialEncuestasDiv.innerHTML += `
@@ -344,7 +483,7 @@ if (historialEncuestasDiv && historialDebatesDiv) {
     onValue(ref(db, 'noticias'), (snapshot) => {
         historialDebatesDiv.innerHTML = '';
         const data = snapshot.val();
-        if(data) {
+        if (data) {
             Object.keys(data).forEach(key => {
                 const deb = data[key];
                 historialDebatesDiv.innerHTML += `
@@ -364,7 +503,7 @@ if (historialEncuestasDiv && historialDebatesDiv) {
 
 window.reusarEncuesta = (key) => {
     get(ref(db, `historial_encuestas/${key}`)).then(snap => {
-        if(snap.exists()) {
+        if (snap.exists()) {
             set(ref(db, 'cuestionario_activo'), snap.val());
             set(ref(db, 'partido_actual'), null);
             alert("¡Encuesta restaurada y activa en la web!");
@@ -373,7 +512,7 @@ window.reusarEncuesta = (key) => {
 };
 
 window.borrarHistorial = (path, key) => {
-    if(confirm("¿Seguro que quieres eliminar este elemento?")) {
+    if (confirm("¿Seguro que quieres eliminar este elemento?")) {
         remove(ref(db, `${path}/${key}`)).then(() => {
             alert("Eliminado correctamente.");
         });
@@ -389,9 +528,9 @@ if (statsCard) {
         let conv = stats.visitas > 0 ? ((stats.clicks / stats.visitas) * 100).toFixed(1) : 0;
         document.getElementById('calc-conversion').innerHTML = `<strong>Conversión:</strong> ${conv}% tocan el botón WA.`;
     });
-    document.getElementById('btn-guardar-seguidores').addEventListener('click', () => {
+    document.getElementById('btn-guardar-seguidores')?.addEventListener('click', () => {
         const s = document.getElementById('input-seguidores').value;
-        if(s) set(ref(db, 'estadisticas/seguidores'), Number(s));
+        if (s) set(ref(db, 'estadisticas/seguidores'), Number(s));
     });
 }
 
@@ -404,65 +543,7 @@ document.getElementById('btn-tema-claro')?.addEventListener('click', () => chang
 document.getElementById('btn-tema-match')?.addEventListener('click', () => changeTheme('matchday', false));
 document.getElementById('btn-tema-champions')?.addEventListener('click', () => changeTheme('champions', false));
 document.getElementById('btn-tema-mundial')?.addEventListener('click', () => changeTheme('mundial', false));
-document.getElementById('btn-tema-auto')?.addEventListener('click', () => {
-    alert("Modo Automático activado.");
-    get(ref(db, 'partido_actual')).then(snap => {
-        const data = snap.val();
-        if(data && data.competicion) checkAndSetAutoTheme(data.competicion);
-    });
-});
 
-function checkAndSetAutoTheme(competicionNombre) {
-    set(ref(db, 'configuracion/tema_auto'), true);
-    const comp = competicionNombre.toLowerCase();
-    let newTheme = 'matchday';
-    if (comp.includes('champions') || comp.includes('uefa')) {
-        newTheme = 'champions';
-    } else if (comp.includes('world cup') || comp.includes('mundial') || comp.includes('euro')) {
-        newTheme = 'mundial';
-    }
-    set(ref(db, 'configuracion/tema_actual'), newTheme);
-}
-
-const btnFetchApi = document.getElementById('btn-fetch-api');
-if (btnFetchApi) {
-    btnFetchApi.addEventListener('click', async () => {
-        const contenedor = document.getElementById('lista-partidos-api');
-        contenedor.innerHTML = "Cargando...";
-        try {
-            const resp = await fetch('https://v3.football.api-sports.io/fixtures?league=140&season=2025&next=5', {
-                method: 'GET',
-                headers: { 'x-apisports-key': '894e5d37c2e991638f73695972b9b890' }
-            });
-            const data = await resp.json();
-            contenedor.innerHTML = '';
-            data.response.forEach(p => {
-                const l = p.teams.home.name; const v = p.teams.away.name; const comp = p.league.name;
-                const div = document.createElement('div');
-                div.style.cssText = "background: #222; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between;";
-                div.innerHTML = `<span>${l} vs ${v} <small style="color:#aaa;">(${comp})</small></span> <button class="btn-poner-porra" data-l="${l}" data-v="${v}" data-c="${comp}">Poner</button>`;
-                contenedor.appendChild(div);
-            });
-            contenedor.querySelectorAll('.btn-poner-porra').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const compNombre = e.currentTarget.getAttribute('data-c');
-                    set(ref(db, 'partido_actual'), { 
-                        equipoLocal: e.currentTarget.getAttribute('data-l'), 
-                        equipoVisitante: e.currentTarget.getAttribute('data-v'),
-                        competicion: compNombre
-                    });
-                    set(ref(db, 'cuestionario_activo'), null);
-                    
-                    get(ref(db, 'configuracion/tema_auto')).then(snap => {
-                        if(snap.val() === true) checkAndSetAutoTheme(compNombre);
-                    });
-                    
-                    alert("Partido fijado y actualizado en la web.");
-                });
-            });
-        } catch (e) { contenedor.innerHTML = "Error al conectar con la API."; }
-    });
-                  }
 // --- A. NAVEGACIÓN POR PESTAÑAS EN EL ADMIN ---
 document.addEventListener('DOMContentLoaded', () => {
     const adminNavBtns = document.querySelectorAll('.admin-nav-btn');
@@ -481,7 +562,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (targetSec) targetSec.style.display = 'block';
             });
         });
-        // Activar la primera por defecto
         adminNavBtns[0].click();
     }
 });
@@ -502,75 +582,18 @@ if (btnCambiarPass) {
     });
 }
 
-// --- C. VOTACIÓN AVANZADA CON PORCENTAJES Y VISTAS EN ADMIN ---
-// Esta función reemplaza la lógica básica de renderizado de la encuesta/cuestionario en la home con porcentajes automáticos:
-const observarCuestionarioAvanzado = () => {
-    const partidoContainer = document.getElementById('partido-container');
-    const tituloInteractivo = document.getElementById('panel-interactivo-titulo');
-    
-    if (partidoContainer) {
-        onValue(ref(db, 'cuestionario_activo'), (quizSnap) => {
-            const qData = quizSnap.val();
-            if (qData) {
-                if(tituloInteractivo) tituloInteractivo.innerText = "📝 CUESTIONARIO ACTIVO (RESULTADOS)";
-                
-                let totalVotos = 0;
-                if (qData.votos) {
-                    Object.values(qData.votos).forEach(v => totalVotos += v);
-                }
-
-                let opcionesHTML = '';
-                qData.opciones.forEach((opt, index) => {
-                    if(opt) {
-                        const votosOpcion = (qData.votos && qData.votos[index]) ? qData.votos[index] : 0;
-                        const porcentaje = totalVotos > 0 ? ((votosOpcion / totalVotos) * 100).toFixed(1) : 0;
-                        
-                        opcionesHTML += `
-                            <div class="quiz-option-wrapper" style="margin-bottom: 10px;">
-                                <button class="btn-quiz-option" data-index="${index}" style="width:100%; text-align:left; padding:10px; margin-bottom:5px;">${opt} (${votosOpcion} votos - <strong>${porcentaje}%</strong>)</button>
-                                <div style="background: #222; height: 6px; border-radius: 3px; overflow: hidden;">
-                                    <div style="background: var(--accent, #e53e3e); width: ${porcentaje}%; height: 100%;"></div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                });
-
-                partidoContainer.innerHTML = `
-                    <h3 style="font-size: 1.3rem; margin-bottom: 15px; color: var(--text-main);">${qData.pregunta}</h3>
-                    <div class="quiz-options-container">${opcionesHTML}</div>
-                    <div id="quiz-resultado" style="margin-top: 15px; font-size: 0.9rem; color: var(--accent);">Total de votos: ${totalVotos}</div>
-                `;
-
-                partidoContainer.querySelectorAll('.btn-quiz-option').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const idx = e.currentTarget.getAttribute('data-index');
-                        const votoRef = ref(db, `cuestionario_activo/votos/${idx}`);
-                        get(votoRef).then(vSnap => {
-                            const actuales = vSnap.val() || 0;
-                            set(votoRef, actuales + 1);
-                            alert("¡Voto registrado correctamente!");
-                        });
-                    });
-                });
-            }
-        });
-    }
-};
-observarCuestionarioAvanzado();
-
-// --- D. PANEL ADMIN: VER VOTOS DE LA ENCUESTA ACTUAL ---
+// --- C. PANEL ADMIN: VER VOTOS DE LA ENCUESTA ACTUAL ---
 const adminVotosContainer = document.getElementById('admin-votos-activos');
 if (adminVotosContainer) {
     onValue(ref(db, 'cuestionario_activo'), (snap) => {
         const qData = snap.val();
         if (qData && qData.opciones) {
             let total = 0;
-            if(qData.votos) Object.values(qData.votos).forEach(v => total += v);
+            if (qData.votos) Object.values(qData.votos).forEach(v => total += v);
             
             let html = `<p><strong>Pregunta:</strong> ${qData.pregunta} (Total: ${total} votos)</p><ul>`;
             qData.opciones.forEach((opt, idx) => {
-                if(opt) {
+                if (opt) {
                     let v = (qData.votos && qData.votos[idx]) ? qData.votos[idx] : 0;
                     html += `<li>${opt}: <strong>${v} votos</strong></li>`;
                 }
@@ -581,117 +604,4 @@ if (adminVotosContainer) {
             adminVotosContainer.innerHTML = `<p style="color:var(--text-muted);">No hay ningún cuestionario activo en este momento para ver votos.</p>`;
         }
     });
-}
-
-// ==========================================
-// FUNCIÓN PARA REGISTRAR UN VOTO (1 VOTO POR USUARIO)
-// ==========================================
-async function votar(idEncuesta, idOpcion) {
-    const user = firebase.auth().currentUser;
-
-    // 1. Verificar si el usuario está logueado
-    if (!user) {
-        showToast('Debes iniciar sesión para poder votar.', 'error');
-        // Opcional: Redirigir al login
-        // window.location.href = 'login.html';
-        return;
-    }
-
-    const uid = user.uid;
-    const votoRef = firebase.database().ref(`votos/${idEncuesta}/${uid}`);
-    const encuestaRef = firebase.database().ref(`encuestas/${idEncuesta}/opciones/${idOpcion}/votos`);
-
-    try {
-        // 2. Comprobar si el usuario YA ha votado en esta encuesta
-        const snapshot = await votoRef.once('value');
-
-        if (snapshot.exists()) {
-            showToast('¡Ya has registrado tu voto en esta encuesta!', 'error');
-            return;
-        }
-
-        // 3. Si no ha votado, guardar su voto utilizando una transacción segura
-        await votoRef.set(idOpcion); // Registra que este UID ya votó
-        
-        // Incrementar el contador de votos de la opción seleccionada de forma atómica
-        await encuestaRef.transaction((votosActuales) => {
-            return (votosActuales || 0) + 1;
-        });
-
-        showToast('¡Tu voto ha sido registrado con éxito!', 'success');
-        
-        // 4. Actualizar la interfaz en pantalla
-        cargarEstadoVotos(idEncuesta);
-
-    } catch (error) {
-        console.error("Error al registrar voto:", error);
-        showToast('Hubo un error al procesar tu voto.', 'error');
-    }
-}
-
-// ==========================================
-// CARGAR Y MOSTRAR RESULTADOS
-// ==========================================
-function escucharResultadosEncuesta(idEncuesta) {
-    const user = firebase.auth().currentUser;
-    const encuestaRef = firebase.database().ref(`encuestas/${idEncuesta}`);
-    const votoUserRef = user ? firebase.database().ref(`votos/${idEncuesta}/${user.uid}`) : null;
-
-    // Escuchar cambios en tiempo real
-    encuestaRef.on('value', async (snapshot) => {
-        const datosEncuesta = snapshot.val();
-        if (!datosEncuesta) return;
-
-        let yaVoto = false;
-        let opcionVotada = null;
-
-        if (user) {
-            const userVotoSnap = await firebase.database().ref(`votos/${idEncuesta}/${user.uid}`).once('value');
-            if (userVotoSnap.exists()) {
-                yaVoto = true;
-                opcionVotada = userVotoSnap.val();
-            }
-        }
-
-        renderizarEncuestaUI(idEncuesta, datosEncuesta, yaVoto, opcionVotada);
-    });
-}
-
-// Renderizar HTML dinámicamente según si ya votó o no
-function renderizarEncuestaUI(idEncuesta, datos, yaVoto, opcionVotada) {
-    const contenedor = document.getElementById(`encuesta-${idEncuesta}`);
-    if (!contenedor) return;
-
-    let html = `<h3>${datos.titulo}</h3><div class="quiz-options">`;
-
-    // Calcular el total de votos
-    let totalVotos = 0;
-    Object.values(datos.opciones).forEach(op => totalVotos += (op.votos || 0));
-
-    // Generar botones u opciones con porcentaje
-    for (const [keyOp, opcion] of Object.entries(datos.opciones)) {
-        const votos = opcion.votos || 0;
-        const porcentaje = totalVotos > 0 ? Math.round((votos / totalVotos) * 100) : 0;
-        
-        if (yaVoto) {
-            // Si YA votó: Mostramos barras de porcentaje deshabilitadas
-            const esLaSeleccionada = (keyOp === opcionVotada) ? ' (Tu voto)' : '';
-            html += `
-                <div class="btn-quiz-option" style="background: linear-gradient(90deg, var(--accent) ${porcentaje}%, var(--panel-bg) ${porcentaje}%); opacity: 0.9; cursor: default;">
-                    <span>${opcion.texto} ${esLaSeleccionada}</span>
-                    <strong style="float: right;">${porcentaje}% (${votos})</strong>
-                </div>
-            `;
-        } else {
-            // Si NO ha votado: Mostramos botones ejecutables
-            html += `
-                <button class="btn-quiz-option" onclick="votar('${idEncuesta}', '${keyOp}')">
-                    ${opcion.texto}
-                </button>
-            `;
-        }
-    }
-
-    html += `</div><p style="margin-top:10px; font-size:0.85rem; color:var(--text-muted);">Total de votos: ${totalVotos}</p>`;
-    contenedor.innerHTML = html;
 }
