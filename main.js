@@ -34,6 +34,30 @@ function showToast(mensaje) {
     alert(mensaje);
 }
 
+// Declarar funciones globales para los onclick del HTML
+window.reusarEncuesta = function(key) {
+    get(ref(db, "historial_encuestas/" + key)).then(function(snap) {
+        if (snap.exists()) {
+            set(ref(db, 'cuestionario_activo'), snap.val());
+            set(ref(db, 'partido_actual'), null);
+            alert("¡Encuesta restaurada y activa!");
+        }
+    });
+};
+
+window.borrarHistorial = function(path, key) {
+    if (confirm("¿Seguro que quieres eliminar este elemento?")) {
+        remove(ref(db, path + "/" + key)).then(function() {
+            alert("Eliminado correctamente.");
+        });
+    }
+};
+
+window.abrirNoticiaModal = function(id) {
+    // Función auxiliar si usas modal de noticias
+    console.log("Abrir noticia: " + id);
+};
+
 // ==========================================
 // 1. INICIALIZACIÓN PRINCIPAL
 // ==========================================
@@ -42,8 +66,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const hamburgerBtn = document.getElementById('hamburger-btn');
     const navLinks = document.getElementById('nav-links');
     if (hamburgerBtn && navLinks) {
-        hamburgerBtn.addEventListener('click', (e) => { e.preventDefault(); navLinks.classList.toggle('active'); });
-        navLinks.querySelectorAll('a').forEach(link => { link.addEventListener('click', () => navLinks.classList.remove('active')); });
+        hamburgerBtn.addEventListener('click', (e) => { 
+            e.preventDefault(); 
+            navLinks.classList.toggle('active'); 
+        });
+        navLinks.querySelectorAll('a').forEach(link => { 
+            link.addEventListener('click', () => navLinks.classList.remove('active')); 
+        });
     }
 
     // Cargar noticias al iniciar
@@ -64,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (targetSec) targetSec.style.display = 'block';
             });
         });
-        adminNavBtns[0].click();
+        if (adminNavBtns[0]) adminNavBtns[0].click();
     }
 
     // Escuchar el estado de autenticación
@@ -94,12 +123,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             (Salir)
                         </button>
                     `;
-                    document.getElementById('btn-logout')?.addEventListener('click', () => {
-                        signOut(auth).then(() => window.location.reload());
-                    });
+                    const logoutBtn = document.getElementById('btn-logout');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', () => {
+                            signOut(auth).then(() => window.location.reload());
+                        });
+                    }
                 }
             } catch (error) {
-                console.error("Error al obtener perfil de usuario:", error);
+                console.error("Error al obtener perfil:", error);
             }
         } else {
             if (authZone) {
@@ -160,15 +192,19 @@ function cargarNoticias() {
     }
 }
 
-function renderCardNoticia(noticia, esPrincipal = false) {
+function renderCardNoticia(noticia, esPrincipal) {
+    const imghtml = noticia.imagen ? `<img src="${noticia.imagen}" alt="${noticia.titulo}" class="noticia-img">` : '';
+    const fechaText = noticia.fecha ? noticia.fecha : 'Reciente';
+    const textoResumen = noticia.resumen ? noticia.resumen : (noticia.contenido ? noticia.contenido.substring(0, 120) + '...' : '');
+
     return `
         <article class="noticia-card ${esPrincipal ? 'destacada' : ''}">
-            ${noticia.imagen ? `<img src="${noticia.imagen}" alt="${noticia.titulo}" class="noticia-img">` : ''}
+            ${imghtml}
             <div class="noticia-content">
-                <span class="noticia-fecha">${noticia.fecha || 'Reciente'}</span>
+                <span class="noticia-fecha">${fechaText}</span>
                 <h3>${noticia.titulo}</h3>
-                <p>${noticia.resumen || (noticia.contenido ? noticia.contenido.substring(0, 120) + '...' : '')}</p>
-                <button class="btn-action" onclick="abrirNoticiaModal('${noticia.id}')">
+                <p>${textoResumen}</p>
+                <button class="btn-action" onclick="window.abrirNoticiaModal('${noticia.id}')">
                     Leer y Comentar 💬
                 </button>
             </div>
@@ -371,9 +407,10 @@ if (carnetsContainer) {
         for (let i = 1; i <= 10; i++) {
             const s = socios[i] || { nombre: '---', status: 'locked' };
             const isActive = s.status === 'active';
+            const numPad = i < 10 ? '00' + i : '0' + i;
             carnetsContainer.innerHTML += `
                 <div class="carnet ${isActive ? 'active' : 'locked'}">
-                    <div class="carnet-num">#${i.toString().padStart(3, '0')}</div>
+                    <div class="carnet-num">#${numPad}</div>
                     <h3 style="margin-bottom: 5px; font-size:1.1rem; color: var(--text-main);">${s.nombre}</h3>
                 </div>
             `;
@@ -385,9 +422,11 @@ if (carnetsContainer) {
 // 6. PANEL DE ADMINISTRACIÓN Y ACCIONES
 // ==========================================
 document.getElementById('btn-publicar-alerta')?.addEventListener('click', () => {
-    const texto = document.getElementById('alert-text').value;
-    const link = document.getElementById('alert-link').value;
-    if (texto) set(ref(db, 'configuracion/alerta'), { activa: true, texto, link });
+    const textoEl = document.getElementById('alert-text');
+    const linkEl = document.getElementById('alert-link');
+    if (textoEl && textoEl.value) {
+        set(ref(db, 'configuracion/alerta'), { activa: true, texto: textoEl.value, link: linkEl ? linkEl.value : '' });
+    }
 });
 
 document.getElementById('btn-quitar-alerta')?.addEventListener('click', () => {
@@ -395,31 +434,34 @@ document.getElementById('btn-quitar-alerta')?.addEventListener('click', () => {
 });
 
 document.getElementById('btn-guardar-socio')?.addEventListener('click', () => {
-    const num = document.getElementById('socio-num').value;
-    const nombre = document.getElementById('socio-name').value;
-    const status = document.getElementById('socio-status').value;
+    const num = document.getElementById('socio-num')?.value;
+    const nombre = document.getElementById('socio-name')?.value;
+    const status = document.getElementById('socio-status')?.value;
     if (num >= 1 && num <= 10 && nombre) {
         set(ref(db, 'socios/' + num), { nombre, status });
-        alert(`Socio #${num} guardado.`);
-        document.getElementById('socio-name').value = '';
+        alert("Socio #" + num + " guardado.");
+        if (document.getElementById('socio-name')) document.getElementById('socio-name').value = '';
     }
 });
 
-// PUBLICAR NUEVA ENCUESTA (ARCHIVA LA ANTERIOR EN LUGAR DE BORRARLA)
+// PUBLICAR NUEVA ENCUESTA (ARCHIVA LA ANTERIOR)
 document.getElementById('btn-publicar-quiz')?.addEventListener('click', async () => {
-    const pregunta = document.getElementById('quiz-question').value;
-    const opt1 = document.getElementById('quiz-opt1').value;
-    const opt2 = document.getElementById('quiz-opt2').value;
-    const opt3 = document.getElementById('quiz-opt3').value;
-    const opt4 = document.getElementById('quiz-opt4').value;
+    const preguntaEl = document.getElementById('quiz-question');
+    const opt1El = document.getElementById('quiz-opt1');
+    const opt2El = document.getElementById('quiz-opt2');
+    const opt3El = document.getElementById('quiz-opt3');
+    const opt4El = document.getElementById('quiz-opt4');
+
+    const pregunta = preguntaEl ? preguntaEl.value : '';
+    const opt1 = opt1El ? opt1El.value : '';
+    const opt2 = opt2El ? opt2El.value : '';
+    const opt3 = opt3El ? opt3El.value : '';
+    const opt4 = opt4El ? opt4El.value : '';
 
     if (pregunta && opt1 && opt2) {
-        // 1. Verificar si hay una encuesta activa previa para pasarla a 'cuestionarios_anteriores'
         const actSnap = await get(ref(db, 'cuestionario_activo'));
         if (actSnap.exists()) {
             const encuestaAntigua = actSnap.val();
-            
-            // Calculamos votos totales recibidos para guardarlo en el historial
             let totalVotos = 0;
             if (encuestaAntigua.votos) {
                 Object.values(encuestaAntigua.votos).forEach(v => totalVotos += (v || 0));
@@ -432,33 +474,35 @@ document.getElementById('btn-publicar-quiz')?.addEventListener('click', async ()
             });
         }
 
-        // 2. Crear los datos de la nueva encuesta
         const nuevaEncuesta = { 
             pregunta, 
             opciones: [opt1, opt2, opt3, opt4].filter(o => o !== "") 
         };
 
-        // 3. Activar la nueva y guardarla en el historial de reuso del admin
         await set(ref(db, 'cuestionario_activo'), nuevaEncuesta);
         await push(ref(db, 'historial_encuestas'), nuevaEncuesta);
         await set(ref(db, 'partido_actual'), null);
 
         alert("¡Cuestionario publicado! La encuesta anterior se guardó en el historial.");
-        document.getElementById('quiz-question').value = '';
-        document.getElementById('quiz-opt1').value = '';
-        document.getElementById('quiz-opt2').value = '';
-        document.getElementById('quiz-opt3').value = '';
-        document.getElementById('quiz-opt4').value = '';
+        if (preguntaEl) preguntaEl.value = '';
+        if (opt1El) opt1El.value = '';
+        if (opt2El) opt2El.value = '';
+        if (opt3El) opt3El.value = '';
+        if (opt4El) opt4El.value = '';
     } else {
         alert("Rellena la pregunta y al menos 2 opciones.");
     }
 });
 
-// PUBLICAR NUEVA NOTICIA / DEBATE (AÑADE FECHA Y ACUMULA SIN BORRAR NADA)
+// PUBLICAR NUEVA NOTICIA / DEBATE
 document.getElementById('btn-publicar-news')?.addEventListener('click', () => {
-    const titulo = document.getElementById('news-title').value;
-    const resumen = document.getElementById('news-desc').value;
-    const categoria = document.getElementById('news-cat').value || 'DEBATE';
+    const tituloEl = document.getElementById('news-title');
+    const resumenEl = document.getElementById('news-desc');
+    const catEl = document.getElementById('news-cat');
+
+    const titulo = tituloEl ? tituloEl.value : '';
+    const resumen = resumenEl ? resumenEl.value : '';
+    const categoria = catEl && catEl.value ? catEl.value : 'DEBATE';
     
     if (titulo && resumen) {
         const fechaActual = new Date().toLocaleDateString('es-ES', { 
@@ -467,7 +511,6 @@ document.getElementById('btn-publicar-news')?.addEventListener('click', () => {
             year: 'numeric' 
         });
 
-        // 'push' añade una nueva entrada a 'noticias' sin sobreescribir las anteriores
         push(ref(db, 'noticias'), { 
             categoria, 
             titulo, 
@@ -475,8 +518,8 @@ document.getElementById('btn-publicar-news')?.addEventListener('click', () => {
             fecha: fechaActual 
         }).then(() => { 
             alert("¡Debate publicado con éxito!");
-            document.getElementById('news-title').value = '';
-            document.getElementById('news-desc').value = '';
+            if (tituloEl) tituloEl.value = '';
+            if (resumenEl) resumenEl.value = '';
         });
     } else {
         alert("Rellena el título y la descripción.");
@@ -530,24 +573,7 @@ if (historialEncuestasDiv && historialDebatesDiv) {
     });
 }
 
-// Funciones globales para botones onclick del HTML
-window.reusarEncuesta = (key) => {
-    get(ref(db, `historial_encuestas/${key}`)).then(snap => {
-        if (snap.exists()) {
-            set(ref(db, 'cuestionario_activo'), snap.val());
-            set(ref(db, 'partido_actual'), null);
-            alert("¡Encuesta restaurada y activa!");
-        }
-    });
-};
-
-window.borrarHistorial = (path, key) => {
-    if (confirm("¿Seguro que quieres eliminar este elemento?")) {
-        remove(ref(db, `${path}/${key}`)).then(() => alert("Eliminado correctamente."));
-    }
-};
-
-// Cambios de Tema en Admin
+// Cambios de Tema
 const changeTheme = (themeName, isAuto) => {
     set(ref(db, 'configuracion/tema_actual'), themeName);
     set(ref(db, 'configuracion/tema_auto'), isAuto);
@@ -558,20 +584,21 @@ document.getElementById('btn-tema-match')?.addEventListener('click', () => chang
 document.getElementById('btn-tema-champions')?.addEventListener('click', () => changeTheme('champions', false));
 document.getElementById('btn-tema-mundial')?.addEventListener('click', () => changeTheme('mundial', false));
 
-// Cambiar Contraseña Admin
+// Cambiar Contraseña
 document.getElementById('btn-cambiar-pass')?.addEventListener('click', () => {
-    const nuevaPass = document.getElementById('admin-new-pass').value.trim();
+    const inputPass = document.getElementById('admin-new-pass');
+    const nuevaPass = inputPass ? inputPass.value.trim() : '';
     if (nuevaPass.length >= 4) {
         set(ref(db, 'configuracion/admin_password'), nuevaPass).then(() => {
             alert("¡Contraseña actualizada!");
-            document.getElementById('admin-new-pass').value = '';
+            if (inputPass) inputPass.value = '';
         });
     } else {
         alert("La contraseña debe tener al menos 4 caracteres.");
     }
 });
 
-// Ver votos activos en Admin
+// Ver votos activos
 const adminVotosContainer = document.getElementById('admin-votos-activos');
 if (adminVotosContainer) {
     onValue(ref(db, 'cuestionario_activo'), (snap) => {
