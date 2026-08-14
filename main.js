@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 2. GESTIÓN DE NOTICIAS
+// 2. GESTIÓN DE NOTICIAS / DEBATES
 // ==========================================
 function cargarNoticias() {
     const destacadaContainer = document.getElementById('noticia-destacada-container');
@@ -405,7 +405,8 @@ document.getElementById('btn-guardar-socio')?.addEventListener('click', () => {
     }
 });
 
-document.getElementById('btn-publicar-quiz')?.addEventListener('click', () => {
+// PUBLICAR NUEVA ENCUESTA (ARCHIVA LA ANTERIOR EN LUGAR DE BORRARLA)
+document.getElementById('btn-publicar-quiz')?.addEventListener('click', async () => {
     const pregunta = document.getElementById('quiz-question').value;
     const opt1 = document.getElementById('quiz-opt1').value;
     const opt2 = document.getElementById('quiz-opt2').value;
@@ -413,11 +414,36 @@ document.getElementById('btn-publicar-quiz')?.addEventListener('click', () => {
     const opt4 = document.getElementById('quiz-opt4').value;
 
     if (pregunta && opt1 && opt2) {
-        const quizData = { pregunta, opciones: [opt1, opt2, opt3, opt4].filter(o => o !== "") };
-        set(ref(db, 'cuestionario_activo'), quizData);
-        push(ref(db, 'historial_encuestas'), quizData);
-        set(ref(db, 'partido_actual'), null);
-        alert("¡Cuestionario lanzado y guardado!");
+        // 1. Verificar si hay una encuesta activa previa para pasarla a 'cuestionarios_anteriores'
+        const actSnap = await get(ref(db, 'cuestionario_activo'));
+        if (actSnap.exists()) {
+            const encuestaAntigua = actSnap.val();
+            
+            // Calculamos votos totales recibidos para guardarlo en el historial
+            let totalVotos = 0;
+            if (encuestaAntigua.votos) {
+                Object.values(encuestaAntigua.votos).forEach(v => totalVotos += (v || 0));
+            }
+
+            push(ref(db, 'cuestionarios_anteriores'), {
+                ...encuestaAntigua,
+                totalVotos,
+                fechaFinalizado: new Date().toLocaleDateString()
+            });
+        }
+
+        // 2. Crear los datos de la nueva encuesta
+        const nuevaEncuesta = { 
+            pregunta, 
+            opciones: [opt1, opt2, opt3, opt4].filter(o => o !== "") 
+        };
+
+        // 3. Activar la nueva y guardarla en el historial de reuso del admin
+        await set(ref(db, 'cuestionario_activo'), nuevaEncuesta);
+        await push(ref(db, 'historial_encuestas'), nuevaEncuesta);
+        await set(ref(db, 'partido_actual'), null);
+
+        alert("¡Cuestionario publicado! La encuesta anterior se guardó en el historial.");
         document.getElementById('quiz-question').value = '';
         document.getElementById('quiz-opt1').value = '';
         document.getElementById('quiz-opt2').value = '';
@@ -428,20 +454,36 @@ document.getElementById('btn-publicar-quiz')?.addEventListener('click', () => {
     }
 });
 
+// PUBLICAR NUEVA NOTICIA / DEBATE (AÑADE FECHA Y ACUMULA SIN BORRAR NADA)
 document.getElementById('btn-publicar-news')?.addEventListener('click', () => {
     const titulo = document.getElementById('news-title').value;
     const resumen = document.getElementById('news-desc').value;
     const categoria = document.getElementById('news-cat').value || 'DEBATE';
+    
     if (titulo && resumen) {
-        push(ref(db, 'noticias'), { categoria, titulo, resumen }).then(() => { 
+        const fechaActual = new Date().toLocaleDateString('es-ES', { 
+            day: '2-digit', 
+            month: 'short', 
+            year: 'numeric' 
+        });
+
+        // 'push' añade una nueva entrada a 'noticias' sin sobreescribir las anteriores
+        push(ref(db, 'noticias'), { 
+            categoria, 
+            titulo, 
+            resumen,
+            fecha: fechaActual 
+        }).then(() => { 
             alert("¡Debate publicado con éxito!");
             document.getElementById('news-title').value = '';
             document.getElementById('news-desc').value = '';
         });
+    } else {
+        alert("Rellena el título y la descripción.");
     }
 });
 
-// Historiales
+// Historiales en Panel Admin
 const historialEncuestasDiv = document.getElementById('historial-encuestas');
 const historialDebatesDiv = document.getElementById('historial-debates');
 
@@ -488,7 +530,7 @@ if (historialEncuestasDiv && historialDebatesDiv) {
     });
 }
 
-// Globales para los onclicks del HTML
+// Funciones globales para botones onclick del HTML
 window.reusarEncuesta = (key) => {
     get(ref(db, `historial_encuestas/${key}`)).then(snap => {
         if (snap.exists()) {
@@ -505,7 +547,7 @@ window.borrarHistorial = (path, key) => {
     }
 };
 
-// Botones de Tema Admin
+// Cambios de Tema en Admin
 const changeTheme = (themeName, isAuto) => {
     set(ref(db, 'configuracion/tema_actual'), themeName);
     set(ref(db, 'configuracion/tema_auto'), isAuto);
@@ -516,7 +558,7 @@ document.getElementById('btn-tema-match')?.addEventListener('click', () => chang
 document.getElementById('btn-tema-champions')?.addEventListener('click', () => changeTheme('champions', false));
 document.getElementById('btn-tema-mundial')?.addEventListener('click', () => changeTheme('mundial', false));
 
-// Cambiar Password Admin
+// Cambiar Contraseña Admin
 document.getElementById('btn-cambiar-pass')?.addEventListener('click', () => {
     const nuevaPass = document.getElementById('admin-new-pass').value.trim();
     if (nuevaPass.length >= 4) {
@@ -529,7 +571,7 @@ document.getElementById('btn-cambiar-pass')?.addEventListener('click', () => {
     }
 });
 
-// Votos activos en panel Admin
+// Ver votos activos en Admin
 const adminVotosContainer = document.getElementById('admin-votos-activos');
 if (adminVotosContainer) {
     onValue(ref(db, 'cuestionario_activo'), (snap) => {
