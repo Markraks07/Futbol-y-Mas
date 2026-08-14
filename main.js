@@ -54,26 +54,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const authZone = document.getElementById('user-auth-zone');
         
         if (user) {
-            // --- REGISTRAR / ACTUALIZAR USUARIO EN LA BD ---
             const userRef = ref(db, `usuarios/${user.uid}`);
             
-            // Guardamos datos básicos sin machacar si ya existen
+            // 1. Obtener datos existentes en la BD para no perder el nombre
+            const userSnap = await get(userRef);
+            let nombreBD = userSnap.exists() ? userSnap.val().nombre : null;
+
+            // Nombre definitivo: Prioridad BD -> Auth DisplayName -> Nombre del email -> "Usuario"
+            const nombreFinal = nombreBD || user.displayName || (user.email ? user.email.split('@')[0] : 'Usuario');
+
+            // 2. Guardar/Actualizar en la base de datos en /usuarios
             await set(userRef, {
                 uid: user.uid,
-                nombre: user.displayName || 'Aficionado',
+                nombre: nombreFinal,
                 email: user.email || 'Sin email',
                 foto: user.photoURL || '',
                 ultimoAcceso: new Date().toISOString()
             }).catch(err => console.error("Error guardando usuario en BD:", err));
 
-            // Actualizar la interfaz (Navbar)
+            // 3. Pintar en la Navbar el nombre real
             if (authZone) {
-                const name = user.displayName || 'Aficionado';
                 authZone.innerHTML = `
                     <span style="color: var(--text-main); font-weight: bold; margin-right: 10px; font-size: 0.9rem;">
-                        ⚽ ${name}
+                        ⚽ ${nombreFinal}
                     </span>
-                    <button id="btn-logout" class="toggle-comments-btn" style="color: var(--accent); font-size: 0.85rem; margin:0;">
+                    <button id="btn-logout" class="toggle-comments-btn" style="color: var(--accent); font-size: 0.85rem; margin:0; cursor:pointer;">
                         (Salir)
                     </button>
                 `;
@@ -89,10 +94,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Escuchar o recargar las encuestas según la sesión del usuario
+        // Escuchar o recargar las encuestas
         escucharZonaInteractiva(user);
     });
 });
+
 
 
 // ==========================================
