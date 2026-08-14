@@ -1,3 +1,21 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { 
+    getAuth, 
+    onAuthStateChanged, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    updateProfile, 
+    GoogleAuthProvider, 
+    signInWithPopup 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { 
+    getDatabase, 
+    ref, 
+    get, 
+    set, 
+    serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
 // ==========================================
 // CONFIGURACIÓN DE FIREBASE
 // ==========================================
@@ -11,20 +29,17 @@ const firebaseConfig = {
     appId: "1:837575806373:web:d823ec3986cfee375cec4c"
 };
 
-// Inicializar Firebase si aún no está inicializado
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-
-const auth = firebase.auth();
-const db = firebase.database();
+// Inicializar Firebase, Auth y Database
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
 // ==========================================
 // CONTROL DE REDIRECCIÓN SI YA ESTÁ LOGUEADO
 // ==========================================
-auth.onAuthStateChanged(user => {
+onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Redirigir al inicio o perfil
+        // Redirigir al inicio si ya hay sesión activa
         window.location.href = 'index.html';
     }
 });
@@ -32,21 +47,26 @@ auth.onAuthStateChanged(user => {
 // ==========================================
 // INTERFAZ DE USUARIO (TABS & TOASTS)
 // ==========================================
-function switchTab(tab) {
+window.switchTab = function(tab) {
     document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
 
     if (tab === 'login') {
-        document.querySelectorAll('.auth-tab')[0].classList.add('active');
-        document.getElementById('form-login').classList.add('active');
+        document.querySelectorAll('.auth-tab')[0]?.classList.add('active');
+        document.getElementById('form-login')?.classList.add('active');
     } else {
-        document.querySelectorAll('.auth-tab')[1].classList.add('active');
-        document.getElementById('form-register').classList.add('active');
+        document.querySelectorAll('.auth-tab')[1]?.classList.add('active');
+        document.getElementById('form-register')?.classList.add('active');
     }
-}
+};
 
 function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
+    if (!container) {
+        alert(message);
+        return;
+    }
+    
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.innerText = message;
@@ -65,101 +85,123 @@ function showToast(message, type = 'info') {
 // BASE DE DATOS: CREAR / SINCRONIZAR USUARIO
 // ==========================================
 async function syncUserData(user, customName = null) {
-    const userRef = db.ref(`users/${user.uid}`);
-    const statsRef = db.ref(`userStats/${user.uid}`);
+    const userRef = ref(db, `users/${user.uid}`);
+    const statsRef = ref(db, `userStats/${user.uid}`);
 
-    const snapshot = await userRef.once('value');
+    try {
+        const snapshot = await get(userRef);
 
-    // Si el usuario es totalmente nuevo en la BD, creamos su perfil
-    if (!snapshot.exists()) {
-        const nameToSave = customName || user.displayName || 'Usuario';
-        
-        // 1. Perfil Principal
-        await userRef.set({
-            uid: user.uid,
-            displayName: nameToSave,
-            email: user.email,
-            role: 'usuario',
-            favoriteTeam: '',
-            bio: '',
-            createdAt: firebase.database.ServerValue.TIMESTAMP
-        });
+        // Si el usuario es totalmente nuevo en la BD, creamos su perfil
+        if (!snapshot.exists()) {
+            const nameToSave = customName || user.displayName || 'Usuario';
 
-        // 2. Estadísticas Iniciales
-        await statsRef.set({
-            xp: 0,
-            level: 1,
-            points: 0,
-            comments: 0,
-            predictions: 0,
-            streak: 1
-        });
+            // 1. Perfil Principal
+            await set(userRef, {
+                uid: user.uid,
+                displayName: nameToSave,
+                email: user.email || 'Sin email',
+                role: 'usuario',
+                favoriteTeam: '',
+                bio: '',
+                createdAt: serverTimestamp()
+            });
+
+            // 2. Estadísticas Iniciales
+            await set(statsRef, {
+                xp: 0,
+                level: 1,
+                points: 0,
+                comments: 0,
+                predictions: 0,
+                streak: 1
+            });
+        }
+    } catch (err) {
+        console.error("Error al sincronizar datos de usuario:", err);
     }
 }
 
 // ==========================================
-// MANEJADORES DE AUTENTICACIÓN
+// EVENT LISTENERS & MANEJADORES DE AUTENTICACIÓN
 // ==========================================
+document.addEventListener('DOMContentLoaded', () => {
 
-// 1. Iniciar Sesión con Email
-async function handleLogin(e) {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const btn = document.getElementById('btn-login');
+    // 1. Iniciar Sesión con Email
+    const formLogin = document.getElementById('form-login');
+    if (formLogin) {
+        formLogin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('btn-login');
 
-    btn.disabled = true;
-    btn.innerText = 'Verificando...';
+            btn.disabled = true;
+            btn.innerText = 'Verificando...';
 
-    try {
-        await auth.signInWithEmailAndPassword(email, password);
-        showToast('¡Bienvenido de nuevo!');
-    } catch (error) {
-        console.error("Error en Login:", error);
-        showToast(getErrorMessage(error.code), 'error');
-        btn.disabled = false;
-        btn.innerText = 'Entrar a la Plataforma';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showToast('¡Bienvenido de nuevo!', 'success');
+                // La redirección ocurrirá en onAuthStateChanged
+            } catch (error) {
+                console.error("Error en Login:", error);
+                showToast(getErrorMessage(error.code), 'error');
+                btn.disabled = false;
+                btn.innerText = 'Entrar a la Plataforma';
+            }
+        });
     }
-}
 
-// 2. Registro con Email
-async function handleRegister(e) {
-    e.preventDefault();
-    const name = document.getElementById('reg-name').value.trim();
-    const email = document.getElementById('reg-email').value;
-    const password = document.getElementById('reg-password').value;
-    const btn = document.getElementById('btn-register');
+    // 2. Registro con Email
+    const formRegister = document.getElementById('form-register');
+    if (formRegister) {
+        formRegister.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const btn = document.getElementById('btn-register');
 
-    btn.disabled = true;
-    btn.innerText = 'Creando cuenta...';
+            btn.disabled = true;
+            btn.innerText = 'Creando cuenta...';
 
-    try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        await userCredential.user.updateProfile({ displayName: name });
-        await syncUserData(userCredential.user, name);
-        
-        showToast('¡Cuenta creada correctamente!');
-    } catch (error) {
-        console.error("Error en Registro:", error);
-        showToast(getErrorMessage(error.code), 'error');
-        btn.disabled = false;
-        btn.innerText = 'Crear Mi Cuenta';
+            try {
+                // Crear usuario
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Guardar nombre en el Perfil de Auth
+                await updateProfile(user, { displayName: name });
+
+                // Crear datos en /users y /userStats de Realtime Database
+                await syncUserData(user, name);
+
+                showToast('¡Cuenta creada correctamente!', 'success');
+                // La redirección ocurrirá en onAuthStateChanged
+            } catch (error) {
+                console.error("Error en Registro:", error);
+                showToast(getErrorMessage(error.code), 'error');
+                btn.disabled = false;
+                btn.innerText = 'Crear Mi Cuenta';
+            }
+        });
     }
-}
 
-// 3. Autenticación con Google
-async function handleGoogleLogin() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-
-    try {
-        const result = await auth.signInWithPopup(provider);
-        await syncUserData(result.user);
-        showToast('¡Sesión iniciada con Google!');
-    } catch (error) {
-        console.error("Error Google Auth:", error);
-        showToast('No se pudo completar el inicio de sesión con Google.', 'error');
+    // 3. Autenticación con Google
+    const btnGoogle = document.getElementById('btn-google-login');
+    if (btnGoogle) {
+        btnGoogle.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                const result = await signInWithPopup(auth, provider);
+                await syncUserData(result.user);
+                showToast('¡Sesión iniciada con Google!', 'success');
+            } catch (error) {
+                console.error("Error Google Auth:", error);
+                showToast('No se pudo completar el inicio de sesión con Google.', 'error');
+            }
+        });
     }
-}
+});
 
 // ==========================================
 // TRADUCCIÓN DE ERRORES DE FIREBASE
