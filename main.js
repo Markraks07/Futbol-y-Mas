@@ -38,7 +38,7 @@ function showToast(mensaje) {
 }
 
 // ==========================================
-// 1. GESTIÓN DE SESIÓN, NAVBAR Y REGISTRO EN BD
+// 1. GESTIÓN DE SESIÓN, NAVBAR Y LECTURA DE USUARIO
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     // Menú Hamburguesa
@@ -54,35 +54,39 @@ document.addEventListener('DOMContentLoaded', () => {
         const authZone = document.getElementById('user-auth-zone');
         
         if (user) {
-            const userRef = ref(db, `usuarios/${user.uid}`);
+            // Leemos la ruta correcta 'users' que guarda login.js
+            const userRef = ref(db, `users/${user.uid}`);
             
-            // 1. Obtener datos existentes en la BD para no perder el nombre
-            const userSnap = await get(userRef);
-            let nombreBD = userSnap.exists() ? userSnap.val().nombre : null;
+            try {
+                const userSnap = await get(userRef);
+                let nombreFinal = user.displayName;
 
-            // Nombre definitivo: Prioridad BD -> Auth DisplayName -> Nombre del email -> "Usuario"
-            const nombreFinal = nombreBD || user.displayName || (user.email ? user.email.split('@')[0] : 'Usuario');
+                if (userSnap.exists() && userSnap.val().displayName) {
+                    nombreFinal = userSnap.val().displayName;
+                } else if (!nombreFinal && user.email) {
+                    nombreFinal = user.email.split('@')[0];
+                }
 
-            // 2. Guardar/Actualizar en la base de datos en /usuarios
-            await set(userRef, {
-                uid: user.uid,
-                nombre: nombreFinal,
-                email: user.email || 'Sin email',
-                foto: user.photoURL || '',
-                ultimoAcceso: new Date().toISOString()
-            }).catch(err => console.error("Error guardando usuario en BD:", err));
+                if (!nombreFinal) nombreFinal = 'Usuario';
 
-            // 3. Pintar en la Navbar el nombre real
-            if (authZone) {
-                authZone.innerHTML = `
-                    <span style="color: var(--text-main); font-weight: bold; margin-right: 10px; font-size: 0.9rem;">
-                        ⚽ ${nombreFinal}
-                    </span>
-                    <button id="btn-logout" class="toggle-comments-btn" style="color: var(--accent); font-size: 0.85rem; margin:0; cursor:pointer;">
-                        (Salir)
-                    </button>
-                `;
-                document.getElementById('btn-logout')?.addEventListener('click', () => signOut(auth));
+                // Mostrar el nombre real en la Navbar
+                if (authZone) {
+                    authZone.innerHTML = `
+                        <span style="color: var(--text-main); font-weight: bold; margin-right: 10px; font-size: 0.9rem;">
+                            ⚽ ${nombreFinal}
+                        </span>
+                        <button id="btn-logout" class="toggle-comments-btn" style="color: var(--accent); font-size: 0.85rem; margin:0; cursor:pointer;">
+                            (Salir)
+                        </button>
+                    `;
+                    document.getElementById('btn-logout')?.addEventListener('click', () => {
+                        signOut(auth).then(() => {
+                            window.location.reload();
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error("Error al obtener perfil de usuario:", error);
             }
         } else {
             if (authZone) {
@@ -94,10 +98,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Escuchar o recargar las encuestas
+        // Cargar zona interactiva
         escucharZonaInteractiva(user);
     });
 });
+
 
 
 
