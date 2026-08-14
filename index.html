@@ -10,21 +10,29 @@
 <body>
     
     <nav class="navbar">
-        <div class="logo">FYM</div>
-        <button class="hamburger" id="hamburger-btn">
-            <svg viewBox="0 0 100 80" width="30" height="30" fill="currentColor">
-                <rect width="100" height="15" rx="8"></rect>
-                <rect y="30" width="100" height="15" rx="8"></rect>
-                <rect y="60" width="100" height="15" rx="8"></rect>
-            </svg>
-        </button>
-        <div class="nav-links" id="nav-links">
-            <a href="#panel-porra">Zona Interactiva</a>
-            <a href="#panel-debates">Debates</a>
-            <a href="#panel-vip">Club 10</a>
-            <a href="admin.html" class="btn-admin">⚙️ Admin</a>
+    <div class="logo">FÚTBOL Y MÁS</div>
+    
+    <button class="hamburger" id="hamburger-btn" aria-label="Menú">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+
+    <div class="nav-links" id="nav-links">
+        <a href="#panel-porra">Participación</a>
+        <a href="#panel-debates">Debates</a>
+        <a href="#panel-vip">Club de los 10</a>
+        
+        <!-- ZONA DINÁMICA DE USUARIO -->
+        <div id="user-auth-zone" style="display: inline-flex; align-items: center; margin-left: 2rem;">
+            <!-- Se rellenará automáticamente desde JS -->
+            <a href="login.html" class="btn-action" style="padding: 6px 16px; font-size: 0.9rem;">Iniciar Sesión</a>
         </div>
-    </nav>
+    </div>
+</nav>
+
 
     <!-- BANNER DE ALERTAS GLOBAL -->
     <a id="alert-banner" href="#" target="_blank" style="display: none; background: var(--accent); color: white; text-align: center; padding: 12px; font-weight: bold; text-decoration: none; text-transform: uppercase;">
