@@ -38,7 +38,7 @@ function showToast(mensaje) {
 }
 
 // ==========================================
-// 1. GESTIÓN DE SESIÓN Y NAVBAR
+// 1. GESTIÓN DE SESIÓN, NAVBAR Y REGISTRO EN BD
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     // Menú Hamburguesa
@@ -50,10 +50,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Escuchar el estado de autenticación de Firebase
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         const authZone = document.getElementById('user-auth-zone');
-        if (authZone) {
-            if (user) {
+        
+        if (user) {
+            // --- REGISTRAR / ACTUALIZAR USUARIO EN LA BD ---
+            const userRef = ref(db, `usuarios/${user.uid}`);
+            
+            // Guardamos datos básicos sin machacar si ya existen
+            await set(userRef, {
+                uid: user.uid,
+                nombre: user.displayName || 'Aficionado',
+                email: user.email || 'Sin email',
+                foto: user.photoURL || '',
+                ultimoAcceso: new Date().toISOString()
+            }).catch(err => console.error("Error guardando usuario en BD:", err));
+
+            // Actualizar la interfaz (Navbar)
+            if (authZone) {
                 const name = user.displayName || 'Aficionado';
                 authZone.innerHTML = `
                     <span style="color: var(--text-main); font-weight: bold; margin-right: 10px; font-size: 0.9rem;">
@@ -64,7 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 `;
                 document.getElementById('btn-logout')?.addEventListener('click', () => signOut(auth));
-            } else {
+            }
+        } else {
+            if (authZone) {
                 authZone.innerHTML = `
                     <a href="login.html" class="btn-action" style="padding: 6px 14px; font-size: 0.85rem; text-decoration: none;">
                         Iniciar Sesión
@@ -78,18 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Métricas de Visitas y Clicks
-if (document.getElementById('news-container')) {
-    const visitasRef = ref(db, 'estadisticas/visitas');
-    get(visitasRef).then((snapshot) => set(visitasRef, (snapshot.val() || 0) + 1));
-}
-
-document.addEventListener('click', (e) => {
-    if (e.target.closest('.track-wa')) {
-        const clicksRef = ref(db, 'estadisticas/clicks');
-        get(clicksRef).then((snapshot) => set(clicksRef, (snapshot.val() || 0) + 1));
-    }
-});
 
 // ==========================================
 // 2. ALERTAS (BANNER GLOBAL)
