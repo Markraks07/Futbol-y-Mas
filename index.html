@@ -288,16 +288,21 @@
     }, 1000); // Actualizar cada segundo
 </script>
 <!-- ================================================== -->
-        <!-- SECCIÓN: PARTIDOS DE HOY -->
-<section id="panel-partidos-hoy" class="panel-box">
-    <h2 class="panel-title">⚽ PARTIDOS DE HOY</h2>
-    <div style="text-align: center; margin-bottom: 15px;">
-        <button id="btn-ver-partidos-index" class="btn-action" style="background-color: #2b6cb0;">Cargar cartelera de hoy</button>
-    </div>
-    <div id="lista-partidos-index" style="display: flex; flex-direction: column; gap: 10px;">
-        <!-- Aquí se renderizarán los partidos mágicamente -->
-    </div>
-</section>
+        <api-sports-widget data-type="games"
+  data-games-style="2"
+  data-refresh="60"
+  data-country="Spain"
+></api-sports-widget>
+
+<!-- Configuration -->
+<api-sports-widget data-type="config"
+  data-key="894e5d37c2e991638f73695972b9b890"
+  data-sport="football"
+  data-lang="es"
+  data-theme="dark"
+  data-timezone="Madrid"
+  data-show-errors="true"
+></api-sports-widget>
 
 
         
