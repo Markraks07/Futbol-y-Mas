@@ -582,3 +582,68 @@ if (adminVotosContainer) {
         }
     });
 }
+
+// ==========================================
+// 8. MOSTRAR PARTIDOS DE HOY EN EL INDEX
+// ==========================================
+const btnVerPartidosIndex = document.getElementById('btn-ver-partidos-index');
+
+if (btnVerPartidosIndex) {
+    btnVerPartidosIndex.addEventListener('click', async () => {
+        const contenedor = document.getElementById('lista-partidos-index');
+        contenedor.innerHTML = '<p class="loading-text" style="text-align:center;">Buscando partidos...</p>';
+        
+        try {
+            // Obtener la fecha actual automáticamente en formato YYYY-MM-DD
+            const hoy = new Date();
+            const fechaHoy = hoy.toISOString().split('T')[0];
+            
+            // Llamamos a la API: Liga 140 (La Liga), Temporada 2026, fecha = hoy
+            const resp = await fetch(`https://v3.football.api-sports.io/fixtures?league=140&season=2026&date=${fechaHoy}`, {
+                method: 'GET',
+                headers: { 'x-apisports-key': '894e5d37c2e991638f73695972b9b890' }
+            });
+            
+            const data = await resp.json();
+            contenedor.innerHTML = '';
+            
+            if (data.response && data.response.length > 0) {
+                data.response.forEach(p => {
+                    const local = p.teams.home.name; 
+                    const visitante = p.teams.away.name;
+                    // Formatear la hora del partido
+                    const hora = new Date(p.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    
+                    // Manejo de goles (si no ha empezado, ponemos un guion o "VS")
+                    const golesL = p.goals.home !== null ? p.goals.home : '-';
+                    const golesV = p.goals.away !== null ? p.goals.away : '-';
+                    const marcador = (golesL === '-' && golesV === '-') ? 'VS' : `${golesL} - ${golesV}`;
+                    
+                    // Crear la tarjeta del partido
+                    const div = document.createElement('div');
+                    div.style.cssText = "background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: 8px; text-align: center;";
+                    div.innerHTML = `
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                            ⏰ ${hora} | Estado: ${p.fixture.status.short}
+                        </div>
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                            <span style="flex: 1; text-align: right; font-weight: bold; color: var(--text-main);">${local}</span>
+                            <span style="background: var(--panel-bg); padding: 5px 12px; border-radius: 6px; font-weight: bold; color: var(--accent); font-size: 1.1rem;">
+                                ${marcador}
+                            </span>
+                            <span style="flex: 1; text-align: left; font-weight: bold; color: var(--text-main);">${visitante}</span>
+                        </div>
+                    `;
+                    contenedor.appendChild(div);
+                });
+            } else {
+                contenedor.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No hay partidos de esta liga programados para hoy.</p>';
+            }
+        } catch (e) {
+            contenedor.innerHTML = '<p style="color: var(--accent); text-align: center;">Error al conectar con la API de deportes.</p>';
+            console.error(e);
+        }
+    });
+}
+
+
