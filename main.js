@@ -9,11 +9,6 @@ import {
     remove, 
     runTransaction 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { 
-    getAuth, 
-    onAuthStateChanged, 
-    signOut 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDGxLmQDmohUivV1XxIsLIWAvDATLRROgE",
@@ -28,13 +23,12 @@ const firebaseConfig = {
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const auth = getAuth(app);
 
 function showToast(mensaje) {
     alert(mensaje);
 }
 
-// Funciones globales expuestas antes de cualquier evento DOM
+// Funciones globales para HTML
 window.reusarEncuesta = function(key) {
     get(ref(db, "historial_encuestas/" + key)).then(function(snap) {
         if (snap.exists()) {
@@ -58,7 +52,7 @@ window.abrirNoticiaModal = function(id) {
 };
 
 // ==========================================
-// 1. INICIALIZACIÓN PRINCIPAL
+// 1. INICIALIZACIÓN PRINCIPAL (SIN LOGIN)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     // Menú Hamburguesa
@@ -77,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cargar noticias al iniciar
     cargarNoticias();
 
-    // Navegación por pestañas en el Admin (PROTEGIDO)
+    // Navegación por pestañas en el Admin
     const adminNavBtns = document.querySelectorAll('.admin-nav-btn');
     const adminSections = document.querySelectorAll('.admin-section');
     if (adminNavBtns.length > 0 && adminSections.length > 0) {
@@ -92,57 +86,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (targetSec) targetSec.style.display = 'block';
             });
         });
-        // Corrección del fallo: solo hace click si existe el botón
         if (adminNavBtns[0]) adminNavBtns[0].click();
     }
 
-    // Escuchar el estado de autenticación
-    onAuthStateChanged(auth, async (user) => {
-        const authZone = document.getElementById('user-auth-zone');
-        
-        if (user) {
-            const userRef = ref(db, `users/${user.uid}`);
-            try {
-                const userSnap = await get(userRef);
-                let nombreFinal = user.displayName;
-
-                if (userSnap.exists() && userSnap.val().displayName) {
-                    nombreFinal = userSnap.val().displayName;
-                } else if (!nombreFinal && user.email) {
-                    nombreFinal = user.email.split('@')[0];
-                }
-
-                if (!nombreFinal) nombreFinal = 'Usuario';
-
-                if (authZone) {
-                    authZone.innerHTML = `
-                        <span style="color: var(--text-main); font-weight: bold; margin-right: 10px; font-size: 0.9rem;">
-                            ⚽ ${nombreFinal}
-                        </span>
-                        <button id="btn-logout" class="toggle-comments-btn" style="color: var(--accent); font-size: 0.85rem; margin:0; cursor:pointer;">
-                            (Salir)
-                        </button>
-                    `;
-                    document.getElementById('btn-logout')?.addEventListener('click', () => {
-                        signOut(auth).then(() => window.location.reload());
-                    });
-                }
-            } catch (error) {
-                console.error("Error al obtener perfil de usuario:", error);
-            }
-        } else {
-            if (authZone) {
-                authZone.innerHTML = `
-                    <a href="login.html" class="btn-action" style="padding: 6px 14px; font-size: 0.85rem; text-decoration: none;">
-                        Iniciar Sesión
-                    </a>
-                `;
-            }
-        }
-        
-        // Cargar zona interactiva / porras
-        escucharZonaInteractiva(user);
-    });
+    // Cargar zona interactiva / porras sin pasar usuario
+    escucharZonaInteractiva(null);
 });
 
 // ==========================================
@@ -208,7 +156,7 @@ function renderCardNoticia(noticia, esPrincipal = false) {
 // ==========================================
 // 3. ZONA INTERACTIVA (PARTIDOS Y PORRAS)
 // ==========================================
-function escucharZonaInteractiva(currentUser) {
+function escucharZonaInteractiva() {
     const partidoContainer = document.getElementById('partido-container');
     const tituloInteractivo = document.getElementById('panel-interactivo-titulo');
     if (!partidoContainer) return;
@@ -226,7 +174,7 @@ function escucharZonaInteractiva(currentUser) {
                 <a href="URL_DE_TU_WHATSAPP" target="_blank" class="btn-action track-wa" style="margin-top:20px; display:inline-block;">Dejar mi predicción en WhatsApp</a>
             `;
         } else {
-            onValue(ref(db, 'cuestionario_activo'), async (quizSnap) => {
+            onValue(ref(db, 'cuestionario_activo'), (quizSnap) => {
                 const qData = quizSnap.val();
                 if (!qData) {
                     if (tituloInteractivo) tituloInteractivo.innerText = "🔥 ZONA DE PARTICIPACIÓN";
@@ -236,17 +184,6 @@ function escucharZonaInteractiva(currentUser) {
 
                 if (tituloInteractivo) tituloInteractivo.innerText = "📝 CUESTIONARIO ACTIVO";
 
-                let yaVoto = false;
-                let opcionVotada = null;
-
-                if (currentUser) {
-                    const userVotoSnap = await get(ref(db, `cuestionario_activo/votos_usuarios/${currentUser.uid}`));
-                    if (userVotoSnap.exists()) {
-                        yaVoto = true;
-                        opcionVotada = userVotoSnap.val();
-                    }
-                }
-
                 let totalVotos = 0;
                 if (qData.votos) {
                     Object.values(qData.votos).forEach(v => totalVotos += (v || 0));
@@ -254,32 +191,13 @@ function escucharZonaInteractiva(currentUser) {
 
                 let opcionesHTML = '';
                 if (qData.opciones) {
-                    qData.opciones.forEach((opt, index) => {
+                    qData.opciones.forEach((opt) => {
                         if (!opt) return;
-                        const votosOpcion = (qData.votos && qData.votos[index]) ? qData.votos[index] : 0;
-                        const porcentaje = totalVotos > 0 ? Math.round((votosOpcion / totalVotos) * 100) : 0;
-
-                        if (yaVoto) {
-                            const esLaSeleccionada = (index == opcionVotada) ? ' 🌟 (Tu voto)' : '';
-                            opcionesHTML += `
-                                <div class="btn-quiz-option" style="background: linear-gradient(90deg, var(--accent) ${porcentaje}%, var(--panel-bg) ${porcentaje}%); opacity: 0.9; cursor: default; margin-bottom: 8px;">
-                                    <span>${opt} ${esLaSeleccionada}</span>
-                                    <strong style="float: right;">${porcentaje}% (${votosOpcion})</strong>
-                                </div>
-                            `;
-                        } else if (currentUser) {
-                            opcionesHTML += `
-                                <button class="btn-quiz-option btn-votar" data-index="${index}" style="margin-bottom: 8px;">
-                                    ${opt}
-                                </button>
-                            `;
-                        } else {
-                            opcionesHTML += `
-                                <button class="btn-quiz-option" style="opacity: 0.7; margin-bottom: 8px;" onclick="window.location.href='login.html'">
-                                    ${opt} (Inicia sesión para votar)
-                                </button>
-                            `;
-                        }
+                        opcionesHTML += `
+                            <button class="btn-quiz-option" style="margin-bottom: 8px;">
+                                ${opt}
+                            </button>
+                        `;
                     });
                 }
 
@@ -288,44 +206,9 @@ function escucharZonaInteractiva(currentUser) {
                     <div class="quiz-options">${opcionesHTML}</div>
                     <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">Total de votos: <strong>${totalVotos}</strong></div>
                 `;
-
-                partidoContainer.querySelectorAll('.btn-votar').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const idx = e.currentTarget.getAttribute('data-index');
-                        await ejecutarVoto(currentUser, idx);
-                    });
-                });
             });
         }
     });
-}
-
-async function ejecutarVoto(user, opcionIdx) {
-    if (!user) {
-        showToast("Debes iniciar sesión para votar.");
-        return;
-    }
-
-    const userVotoRef = ref(db, `cuestionario_activo/votos_usuarios/${user.uid}`);
-    const contadorVotoRef = ref(db, `cuestionario_activo/votos/${opcionIdx}`);
-
-    try {
-        const snap = await get(userVotoRef);
-        if (snap.exists()) {
-            showToast("Ya has votado en esta encuesta.");
-            return;
-        }
-
-        await set(userVotoRef, opcionIdx);
-        await runTransaction(contadorVotoRef, (votosActuales) => {
-            return (votosActuales || 0) + 1;
-        });
-
-        showToast("¡Voto registrado con éxito!");
-    } catch (error) {
-        console.error("Error al votar:", error);
-        showToast("Hubo un error al guardar tu voto.");
-    }
 }
 
 // ==========================================
@@ -411,7 +294,7 @@ if (carnetsContainer) {
 }
 
 // ==========================================
-// 6. PANEL DE ADMINISTRACIÓN Y ACCIONES (PROTEGIDOS CON OPTIONAL CHAINING)
+// 6. PANEL DE ADMINISTRACIÓN Y ACCIONES
 // ==========================================
 document.getElementById('btn-publicar-alerta')?.addEventListener('click', () => {
     const texto = document.getElementById('alert-text')?.value;
@@ -467,7 +350,7 @@ document.getElementById('btn-publicar-quiz')?.addEventListener('click', async ()
         await push(ref(db, 'historial_encuestas'), nuevaEncuesta);
         await set(ref(db, 'partido_actual'), null);
 
-        alert("¡Cuestionario publicado! La encuesta anterior se guardó en el historial.");
+        alert("¡Cuestionario publicado!");
         if (document.getElementById('quiz-question')) document.getElementById('quiz-question').value = '';
         if (document.getElementById('quiz-opt1')) document.getElementById('quiz-opt1').value = '';
         if (document.getElementById('quiz-opt2')) document.getElementById('quiz-opt2').value = '';
