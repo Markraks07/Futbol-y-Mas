@@ -12,7 +12,9 @@ import {
 import { 
     getAuth, 
     onAuthStateChanged, 
-    signOut 
+    signOut, 
+    GoogleAuthProvider, 
+    signInWithPopup 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -25,83 +27,36 @@ const firebaseConfig = {
     appId: "1:837575806373:web:d823ec3986cfee375cec4c"
 };
 
-// Inicializar Firebase
+// Inicializar Firebase, Database y Auth
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
+// Helper para notificaciones simples
 function showToast(mensaje) {
     alert(mensaje);
 }
 
-// Declarar funciones globales para los onclick del HTML
-window.reusarEncuesta = function(key) {
-    get(ref(db, "historial_encuestas/" + key)).then(function(snap) {
-        if (snap.exists()) {
-            set(ref(db, 'cuestionario_activo'), snap.val());
-            set(ref(db, 'partido_actual'), null);
-            alert("¡Encuesta restaurada y activa!");
-        }
-    });
-};
-
-window.borrarHistorial = function(path, key) {
-    if (confirm("¿Seguro que quieres eliminar este elemento?")) {
-        remove(ref(db, path + "/" + key)).then(function() {
-            alert("Eliminado correctamente.");
-        });
-    }
-};
-
-window.abrirNoticiaModal = function(id) {
-    // Función auxiliar si usas modal de noticias
-    console.log("Abrir noticia: " + id);
-};
-
 // ==========================================
-// 1. INICIALIZACIÓN PRINCIPAL
+// 1. GESTIÓN DE SESIÓN, NAVBAR Y LECTURA DE USUARIO
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     // Menú Hamburguesa
     const hamburgerBtn = document.getElementById('hamburger-btn');
     const navLinks = document.getElementById('nav-links');
     if (hamburgerBtn && navLinks) {
-        hamburgerBtn.addEventListener('click', (e) => { 
-            e.preventDefault(); 
-            navLinks.classList.toggle('active'); 
-        });
-        navLinks.querySelectorAll('a').forEach(link => { 
-            link.addEventListener('click', () => navLinks.classList.remove('active')); 
-        });
+        hamburgerBtn.addEventListener('click', (e) => { e.preventDefault(); navLinks.classList.toggle('active'); });
+        navLinks.querySelectorAll('a').forEach(link => { link.addEventListener('click', () => navLinks.classList.remove('active')); });
     }
 
-    // Cargar noticias al iniciar
-    cargarNoticias();
-
-    // Navegación por pestañas en el Admin
-    const adminNavBtns = document.querySelectorAll('.admin-nav-btn');
-    const adminSections = document.querySelectorAll('.admin-section');
-    if (adminNavBtns.length > 0 && adminSections.length > 0) {
-        adminNavBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const targetId = e.currentTarget.getAttribute('data-target');
-                adminNavBtns.forEach(b => b.classList.remove('active'));
-                adminSections.forEach(sec => sec.style.display = 'none');
-
-                e.currentTarget.classList.add('active');
-                const targetSec = document.getElementById(targetId);
-                if (targetSec) targetSec.style.display = 'block';
-            });
-        });
-        if (adminNavBtns[0]) adminNavBtns[0].click();
-    }
-
-    // Escuchar el estado de autenticación
+    // Escuchar el estado de autenticación de Firebase
     onAuthStateChanged(auth, async (user) => {
         const authZone = document.getElementById('user-auth-zone');
         
         if (user) {
+            // Leemos la ruta correcta 'users' que guarda login.js
             const userRef = ref(db, `users/${user.uid}`);
+            
             try {
                 const userSnap = await get(userRef);
                 let nombreFinal = user.displayName;
@@ -114,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!nombreFinal) nombreFinal = 'Usuario';
 
+                // Mostrar el nombre real en la Navbar
                 if (authZone) {
                     authZone.innerHTML = `
                         <span style="color: var(--text-main); font-weight: bold; margin-right: 10px; font-size: 0.9rem;">
@@ -123,15 +79,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             (Salir)
                         </button>
                     `;
-                    const logoutBtn = document.getElementById('btn-logout');
-                    if (logoutBtn) {
-                        logoutBtn.addEventListener('click', () => {
-                            signOut(auth).then(() => window.location.reload());
+                    document.getElementById('btn-logout')?.addEventListener('click', () => {
+                        signOut(auth).then(() => {
+                            window.location.reload();
                         });
-                    }
+                    });
                 }
             } catch (error) {
-                console.error("Error al obtener perfil:", error);
+                console.error("Error al obtener perfil de usuario:", error);
             }
         } else {
             if (authZone) {
@@ -143,13 +98,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Cargar zona interactiva / porras
+        // Cargar zona interactiva
         escucharZonaInteractiva(user);
     });
 });
 
 // ==========================================
-// 2. GESTIÓN DE NOTICIAS / DEBATES
+// 2. GESTIÓN DE NOTICIAS (ÚLTIMA NOTICIA + VER TODAS)
 // ==========================================
 function cargarNoticias() {
     const destacadaContainer = document.getElementById('noticia-destacada-container');
@@ -158,28 +113,34 @@ function cargarNoticias() {
 
     if (!destacadaContainer) return;
 
-    onValue(ref(db, 'noticias'), (snapshot) => {
+    const noticiasRef = ref(db, 'noticias');
+    
+    onValue(noticiasRef, (snapshot) => {
         if (!snapshot.exists()) {
             destacadaContainer.innerHTML = '<p class="no-data">No hay noticias publicadas aún.</p>';
             return;
         }
 
         const data = snapshot.val();
+        // Convertimos a array y ordenamos por fecha (de más reciente a más antigua)
         const listaNoticias = Object.keys(data).map(key => ({
             id: key,
             ...data[key]
         })).reverse();
 
+        // 1. PINTAR ÚLTIMA NOTICIA (index 0)
         const ultimaNoticia = listaNoticias[0];
         destacadaContainer.innerHTML = renderCardNoticia(ultimaNoticia, true);
 
+        // 2. PREPARAR EL HISTORIAL DE NOTICIAS RESTANTES
         if (listaNoticias.length > 1 && listaTodasContainer) {
             listaTodasContainer.innerHTML = listaNoticias.slice(1).map(noticia => renderCardNoticia(noticia, false)).join('');
         } else if (btnVerTodas) {
-            btnVerTodas.style.display = 'none';
+            btnVerTodas.style.display = 'none'; // Si solo hay 1 noticia, ocultamos el botón
         }
     });
 
+    // Evento para desplegar todas las noticias
     if (btnVerTodas) {
         btnVerTodas.addEventListener('click', (e) => {
             e.preventDefault();
@@ -192,19 +153,16 @@ function cargarNoticias() {
     }
 }
 
-function renderCardNoticia(noticia, esPrincipal) {
-    const imghtml = noticia.imagen ? `<img src="${noticia.imagen}" alt="${noticia.titulo}" class="noticia-img">` : '';
-    const fechaText = noticia.fecha ? noticia.fecha : 'Reciente';
-    const textoResumen = noticia.resumen ? noticia.resumen : (noticia.contenido ? noticia.contenido.substring(0, 120) + '...' : '');
-
+// Plantilla HTML para tarjetas de noticias
+function renderCardNoticia(noticia, esPrincipal = false) {
     return `
         <article class="noticia-card ${esPrincipal ? 'destacada' : ''}">
-            ${imghtml}
+            ${noticia.imagen ? `<img src="${noticia.imagen}" alt="${noticia.titulo}" class="noticia-img">` : ''}
             <div class="noticia-content">
-                <span class="noticia-fecha">${fechaText}</span>
+                <span class="noticia-fecha">${noticia.fecha || 'Reciente'}</span>
                 <h3>${noticia.titulo}</h3>
-                <p>${textoResumen}</p>
-                <button class="btn-action" onclick="window.abrirNoticiaModal('${noticia.id}')">
+                <p>${noticia.resumen || noticia.contenido.substring(0, 120) + '...'}</p>
+                <button class="btn-action" onclick="abrirNoticiaModal('${noticia.id}')">
                     Leer y Comentar 💬
                 </button>
             </div>
@@ -213,130 +171,73 @@ function renderCardNoticia(noticia, esPrincipal) {
 }
 
 // ==========================================
-// 3. ZONA INTERACTIVA (PARTIDOS Y PORRAS)
+// 3. GESTIÓN DE CUESTIONARIOS / PORRAS (ÚLTIMO ACTIVO)
 // ==========================================
 function escucharZonaInteractiva(currentUser) {
     const partidoContainer = document.getElementById('partido-container');
-    const tituloInteractivo = document.getElementById('panel-interactivo-titulo');
+    const listaHistorialContainer = document.getElementById('lista-todos-cuestionarios');
+    const btnVerTodos = document.getElementById('btn-ver-todos-cuestionarios');
+
     if (!partidoContainer) return;
 
-    onValue(ref(db, 'partido_actual'), (snapshot) => {
-        const data = snapshot.val();
-        if (data && data.equipoLocal) {
-            if (tituloInteractivo) tituloInteractivo.innerText = "🔥 LA PORRA DE LA SEMANA";
-            partidoContainer.innerHTML = `
-                <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; text-transform: uppercase;">${data.competicion || 'AMISTOSO'}</div>
-                <span style="color: var(--text-main); font-size: 1.5rem; font-weight: bold;">${data.equipoLocal}</span> 
-                <span style="color: var(--accent); margin: 0 10px; font-size: 1.5rem;">VS</span> 
-                <span style="color: var(--text-main); font-size: 1.5rem; font-weight: bold;">${data.equipoVisitante}</span>
-                <br>
-                <a href="URL_DE_TU_WHATSAPP" target="_blank" class="btn-action track-wa" style="margin-top:20px; display:inline-block;">Dejar mi predicción en WhatsApp</a>
-            `;
-        } else {
-            onValue(ref(db, 'cuestionario_activo'), async (quizSnap) => {
-                const qData = quizSnap.val();
-                if (!qData) {
-                    if (tituloInteractivo) tituloInteractivo.innerText = "🔥 ZONA DE PARTICIPACIÓN";
-                    partidoContainer.innerHTML = `<p style="color: var(--text-muted);">No hay partidos ni encuestas activas ahora mismo.</p>`;
-                    return;
-                }
-
-                if (tituloInteractivo) tituloInteractivo.innerText = "📝 CUESTIONARIO ACTIVO";
-
-                let yaVoto = false;
-                let opcionVotada = null;
-
-                if (currentUser) {
-                    const userVotoSnap = await get(ref(db, `cuestionario_activo/votos_usuarios/${currentUser.uid}`));
-                    if (userVotoSnap.exists()) {
-                        yaVoto = true;
-                        opcionVotada = userVotoSnap.val();
-                    }
-                }
-
-                let totalVotos = 0;
-                if (qData.votos) {
-                    Object.values(qData.votos).forEach(v => totalVotos += (v || 0));
-                }
-
-                let opcionesHTML = '';
-                if (qData.opciones) {
-                    qData.opciones.forEach((opt, index) => {
-                        if (!opt) return;
-                        const votosOpcion = (qData.votos && qData.votos[index]) ? qData.votos[index] : 0;
-                        const porcentaje = totalVotos > 0 ? Math.round((votosOpcion / totalVotos) * 100) : 0;
-
-                        if (yaVoto) {
-                            const esLaSeleccionada = (index == opcionVotada) ? ' 🌟 (Tu voto)' : '';
-                            opcionesHTML += `
-                                <div class="btn-quiz-option" style="background: linear-gradient(90deg, var(--accent) ${porcentaje}%, var(--panel-bg) ${porcentaje}%); opacity: 0.9; cursor: default; margin-bottom: 8px;">
-                                    <span>${opt} ${esLaSeleccionada}</span>
-                                    <strong style="float: right;">${porcentaje}% (${votosOpcion})</strong>
-                                </div>
-                            `;
-                        } else if (currentUser) {
-                            opcionesHTML += `
-                                <button class="btn-quiz-option btn-votar" data-index="${index}" style="margin-bottom: 8px;">
-                                    ${opt}
-                                </button>
-                            `;
-                        } else {
-                            opcionesHTML += `
-                                <button class="btn-quiz-option" style="opacity: 0.7; margin-bottom: 8px;" onclick="window.location.href='login.html'">
-                                    ${opt} (Inicia sesión para votar)
-                                </button>
-                            `;
-                        }
-                    });
-                }
-
-                partidoContainer.innerHTML = `
-                    <h3 style="font-size: 1.3rem; margin-bottom: 15px; color: var(--text-main);">${qData.pregunta}</h3>
-                    <div class="quiz-options">${opcionesHTML}</div>
-                    <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">Total de votos: <strong>${totalVotos}</strong></div>
-                `;
-
-                partidoContainer.querySelectorAll('.btn-votar').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const idx = e.currentTarget.getAttribute('data-index');
-                        await ejecutarVoto(currentUser, idx);
-                    });
-                });
-            });
-        }
-    });
-}
-
-async function ejecutarVoto(user, opcionIdx) {
-    if (!user) {
-        showToast("Debes iniciar sesión para votar.");
-        return;
-    }
-
-    const userVotoRef = ref(db, `cuestionario_activo/votos_usuarios/${user.uid}`);
-    const contadorVotoRef = ref(db, `cuestionario_activo/votos/${opcionIdx}`);
-
-    try {
-        const snap = await get(userVotoRef);
-        if (snap.exists()) {
-            showToast("Ya has votado en esta encuesta.");
+    // Escuchar el cuestionario activo
+    const activoRef = ref(db, 'cuestionario_activo');
+    onValue(activoRef, async (snapshot) => {
+        if (!snapshot.exists()) {
+            partidoContainer.innerHTML = '<p class="no-data">No hay encuestas o porras activas en este momento.</p>';
             return;
         }
 
-        await set(userVotoRef, opcionIdx);
-        await runTransaction(contadorVotoRef, (votosActuales) => {
-            return (votosActuales || 0) + 1;
-        });
+        const cuestionario = snapshot.val();
+        
+        // Renderizamos la porra/encuesta principal
+        await renderCuestionarioPrincipal(cuestionario, currentUser, partidoContainer);
+    });
 
-        showToast("¡Voto registrado con éxito!");
-    } catch (error) {
-        console.error("Error al votar:", error);
-        showToast("Hubo un error al guardar tu voto.");
+    // Evento para toggle de historial de cuestionarios
+    if (btnVerTodos) {
+        btnVerTodos.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (listaHistorialContainer) {
+                const isHidden = listaHistorialContainer.style.display === 'none';
+                
+                if (isHidden) {
+                    // Cargar historial desde Firebase la primera vez
+                    await cargarHistorialCuestionarios(listaHistorialContainer, currentUser);
+                }
+                
+                listaHistorialContainer.style.display = isHidden ? 'block' : 'none';
+                btnVerTodos.innerText = isHidden ? '← Ocultar encuestas anteriores' : 'Ver encuestas anteriores →';
+            }
+        });
     }
 }
 
+// Función auxiliar para cargar el historial antiguo de Firebase
+async function cargarHistorialCuestionarios(container, user) {
+    const historialRef = ref(db, 'cuestionarios_anteriores');
+    const snap = await get(historialRef);
+
+    if (!snap.exists()) {
+        container.innerHTML = '<p style="text-align:center; color: var(--text-muted);">No hay encuestas pasadas registrados.</p>';
+        return;
+    }
+
+    const data = snap.val();
+    const lista = Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse();
+
+    container.innerHTML = lista.map(c => `
+        <div class="cuestionario-pasado-item" style="padding: 12px; background: rgba(255,255,255,0.05); margin-bottom: 10px; border-radius: 8px;">
+            <h4>${c.pregunta}</h4>
+            <small>Finalizado - Total votos: ${c.totalVotos || 0}</small>
+        </div>
+    `).join('');
+}
+
+
+
 // ==========================================
-// 4. CONFIGURACIONES DE TEMA Y ALERTAS
+// 2. ALERTAS (BANNER GLOBAL)
 // ==========================================
 const alertBanner = document.getElementById('alert-banner');
 if (alertBanner) {
@@ -354,7 +255,30 @@ if (alertBanner) {
     });
 }
 
-// Cambios de tema
+// ==========================================
+// 3. SOCIOS VIP (CLUB DE LOS 10)
+// ==========================================
+const carnetsContainer = document.getElementById('carnets-container');
+if (carnetsContainer) {
+    onValue(ref(db, 'socios'), (snapshot) => {
+        carnetsContainer.innerHTML = '';
+        const socios = snapshot.val() || {};
+        for (let i = 1; i <= 10; i++) {
+            const s = socios[i] || { nombre: '---', status: 'locked' };
+            const isActive = s.status === 'active';
+            carnetsContainer.innerHTML += `
+                <div class="carnet ${isActive ? 'active' : 'locked'}">
+                    <div class="carnet-num">#${i.toString().padStart(3, '0')}</div>
+                    <h3 style="margin-bottom: 5px; font-size:1.1rem; color: var(--text-main);">${s.nombre}</h3>
+                </div>
+            `;
+        }
+    });
+}
+
+// ==========================================
+// 4. TEMAS DE COLOR DINÁMICOS
+// ==========================================
 onValue(ref(db, 'configuracion/tema_actual'), (snapshot) => {
     const tema = snapshot.val() || 'dark';
     const root = document.documentElement;
@@ -397,136 +321,285 @@ onValue(ref(db, 'configuracion/tema_actual'), (snapshot) => {
 });
 
 // ==========================================
-// 5. SOCIOS VIP
+// 5. ZONA INTERACTIVA Y VOTACIÓN (1 VOTO POR USUARIO)
 // ==========================================
-const carnetsContainer = document.getElementById('carnets-container');
-if (carnetsContainer) {
-    onValue(ref(db, 'socios'), (snapshot) => {
-        carnetsContainer.innerHTML = '';
-        const socios = snapshot.val() || {};
-        for (let i = 1; i <= 10; i++) {
-            const s = socios[i] || { nombre: '---', status: 'locked' };
-            const isActive = s.status === 'active';
-            const numPad = i < 10 ? '00' + i : '0' + i;
-            carnetsContainer.innerHTML += `
-                <div class="carnet ${isActive ? 'active' : 'locked'}">
-                    <div class="carnet-num">#${numPad}</div>
-                    <h3 style="margin-bottom: 5px; font-size:1.1rem; color: var(--text-main);">${s.nombre}</h3>
-                </div>
+function escucharZonaInteractiva(currentUser) {
+    const partidoContainer = document.getElementById('partido-container');
+    const tituloInteractivo = document.getElementById('panel-interactivo-titulo');
+    if (!partidoContainer) return;
+
+    onValue(ref(db, 'partido_actual'), (snapshot) => {
+        const data = snapshot.val();
+        if (data && data.equipoLocal) {
+            if (tituloInteractivo) tituloInteractivo.innerText = "🔥 LA PORRA DE LA SEMANA";
+            partidoContainer.innerHTML = `
+                <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; text-transform: uppercase;">${data.competicion || 'AMISTOSO'}</div>
+                <span style="color: var(--text-main); font-size: 1.5rem; font-weight: bold;">${data.equipoLocal}</span> 
+                <span style="color: var(--accent); margin: 0 10px; font-size: 1.5rem;">VS</span> 
+                <span style="color: var(--text-main); font-size: 1.5rem; font-weight: bold;">${data.equipoVisitante}</span>
+                <br>
+                <a href="URL_DE_TU_WHATSAPP" target="_blank" class="btn-action track-wa" style="margin-top:20px; display:inline-block;">Dejar mi predicción en WhatsApp</a>
             `;
+        } else {
+            // Cargar Cuestionario Activo con control de 1 voto por UID
+            onValue(ref(db, 'cuestionario_activo'), async (quizSnap) => {
+                const qData = quizSnap.val();
+                if (!qData) {
+                    if (tituloInteractivo) tituloInteractivo.innerText = "🔥 ZONA DE PARTICIPACIÓN";
+                    partidoContainer.innerHTML = `<p style="color: var(--text-muted);">No hay partidos ni encuestas activas ahora mismo.</p>`;
+                    return;
+                }
+
+                if (tituloInteractivo) tituloInteractivo.innerText = "📝 CUESTIONARIO ACTIVO";
+
+                let yaVoto = false;
+                let opcionVotada = null;
+
+                // Verificar si el usuario ya votó en la BD
+                if (currentUser) {
+                    const userVotoSnap = await get(ref(db, `cuestionario_activo/votos_usuarios/${currentUser.uid}`));
+                    if (userVotoSnap.exists()) {
+                        yaVoto = true;
+                        opcionVotada = userVotoSnap.val();
+                    }
+                }
+
+                // Calcular total de votos
+                let totalVotos = 0;
+                if (qData.votos) {
+                    Object.values(qData.votos).forEach(v => totalVotos += (v || 0));
+                }
+
+                let opcionesHTML = '';
+                qData.opciones.forEach((opt, index) => {
+                    if (!opt) return;
+                    const votosOpcion = (qData.votos && qData.votos[index]) ? qData.votos[index] : 0;
+                    const porcentaje = totalVotos > 0 ? Math.round((votosOpcion / totalVotos) * 100) : 0;
+
+                    if (yaVoto) {
+                        const esLaSeleccionada = (index == opcionVotada) ? ' 🌟 (Tu voto)' : '';
+                        opcionesHTML += `
+                            <div class="btn-quiz-option" style="background: linear-gradient(90deg, var(--accent) ${porcentaje}%, var(--panel-bg) ${porcentaje}%); opacity: 0.9; cursor: default; margin-bottom: 8px;">
+                                <span>${opt} ${esLaSeleccionada}</span>
+                                <strong style="float: right;">${porcentaje}% (${votosOpcion})</strong>
+                            </div>
+                        `;
+                    } else if (currentUser) {
+                        opcionesHTML += `
+                            <button class="btn-quiz-option btn-votar" data-index="${index}" style="margin-bottom: 8px;">
+                                ${opt}
+                            </button>
+                        `;
+                    } else {
+                        opcionesHTML += `
+                            <button class="btn-quiz-option" style="opacity: 0.7; margin-bottom: 8px;" onclick="window.location.href='login.html'">
+                                ${opt} (Inicia sesión para votar)
+                            </button>
+                        `;
+                    }
+                });
+
+                partidoContainer.innerHTML = `
+                    <h3 style="font-size: 1.3rem; margin-bottom: 15px; color: var(--text-main);">${qData.pregunta}</h3>
+                    <div class="quiz-options">${opcionesHTML}</div>
+                    <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">Total de votos: <strong>${totalVotos}</strong></div>
+                `;
+
+                // Eventos de clic para los botones de votación
+                partidoContainer.querySelectorAll('.btn-votar').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const idx = e.currentTarget.getAttribute('data-index');
+                        await ejecutarVoto(currentUser, idx);
+                    });
+                });
+            });
+        }
+    });
+}
+
+// Función transaccional para ejecutar el voto de forma segura
+async function ejecutarVoto(user, opcionIdx) {
+    if (!user) {
+        showToast("Debes iniciar sesión para votar.");
+        return;
+    }
+
+    const userVotoRef = ref(db, `cuestionario_activo/votos_usuarios/${user.uid}`);
+    const contadorVotoRef = ref(db, `cuestionario_activo/votos/${opcionIdx}`);
+
+    try {
+        const snap = await get(userVotoRef);
+        if (snap.exists()) {
+            showToast("Ya has votado en esta encuesta.");
+            return;
+        }
+
+        // Marcar que el usuario votó
+        await set(userVotoRef, opcionIdx);
+
+        // Incrementar el contador de forma atómica
+        await runTransaction(contadorVotoRef, (votosActuales) => {
+            return (votosActuales || 0) + 1;
+        });
+
+        showToast("¡Voto registrado con éxito!");
+    } catch (error) {
+        console.error("Error al votar:", error);
+        showToast("Hubo un error al guardar tu voto.");
+    }
+}
+
+// ==========================================
+// 6. DEBATES Y COMENTARIOS
+// ==========================================
+const newsContainer = document.getElementById('news-container');
+if (newsContainer) {
+    onValue(ref(db, 'noticias'), (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            newsContainer.innerHTML = '';
+            Object.keys(data).reverse().forEach((key) => {
+                const n = data[key];
+                
+                let comentariosHTML = '';
+                let totalComentarios = 0;
+                if (n.comentarios) {
+                    totalComentarios = Object.values(n.comentarios).length;
+                    Object.values(n.comentarios).forEach(c => {
+                        comentariosHTML += `<div class="comment-item"><strong>${c.autor}:</strong> ${c.texto}</div>`;
+                    });
+                } else {
+                    comentariosHTML = `<div style="font-size: 0.8rem; color: var(--text-muted);">Sé el primero en opinar.</div>`;
+                }
+
+                newsContainer.innerHTML += `
+                    <div class="news-card" data-id="${key}">
+                        <span class="news-cat">${n.categoria}</span>
+                        <h3>${n.titulo}</h3>
+                        <p>${n.resumen}</p>
+                        
+                        <button class="toggle-comments-btn" data-id="${key}">💬 Ver comentarios (${totalComentarios})</button>
+                        
+                        <div class="comments-dropdown" id="dropdown-${key}">
+                            <div class="comments-list">${comentariosHTML}</div>
+                            <div class="comment-form" style="display:flex; gap: 5px; margin-top: 10px;">
+                                <input type="text" id="author-${key}" placeholder="Nombre" style="width:30%;">
+                                <input type="text" id="text-${key}" placeholder="Opinión..." style="width:70%;">
+                                <button class="btn-enviar-comentario btn-action" data-id="${key}">Enviar</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            newsContainer.querySelectorAll('.toggle-comments-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    const dropdown = document.getElementById(`dropdown-${id}`);
+                    if (dropdown) dropdown.classList.toggle('active');
+                });
+            });
+
+            newsContainer.querySelectorAll('.btn-enviar-comentario').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    const autorInput = document.getElementById(`author-${id}`);
+                    const textoInput = document.getElementById(`text-${id}`);
+                    const autor = autorInput.value.trim();
+                    const texto = textoInput.value.trim();
+
+                    if (autor && texto) {
+                        push(ref(db, `noticias/${id}/comentarios`), { autor, texto }).then(() => {
+                            autorInput.value = '';
+                            textoInput.value = '';
+                        });
+                    } else {
+                        alert("Introduce tu nombre y un comentario.");
+                    }
+                });
+            });
+        } else {
+            newsContainer.innerHTML = `<p class="loading-text">No hay debates publicados.</p>`;
         }
     });
 }
 
 // ==========================================
-// 6. PANEL DE ADMINISTRACIÓN Y ACCIONES
+// 7. PANEL DE ADMINISTRACIÓN Y HISTORIAL
 // ==========================================
-document.getElementById('btn-publicar-alerta')?.addEventListener('click', () => {
-    const textoEl = document.getElementById('alert-text');
-    const linkEl = document.getElementById('alert-link');
-    if (textoEl && textoEl.value) {
-        set(ref(db, 'configuracion/alerta'), { activa: true, texto: textoEl.value, link: linkEl ? linkEl.value : '' });
-    }
-});
+const btnPubAlerta = document.getElementById('btn-publicar-alerta');
+if (btnPubAlerta) {
+    btnPubAlerta.addEventListener('click', () => {
+        const texto = document.getElementById('alert-text').value;
+        const link = document.getElementById('alert-link').value;
+        if (texto) set(ref(db, 'configuracion/alerta'), { activa: true, texto, link });
+    });
+}
 
-document.getElementById('btn-quitar-alerta')?.addEventListener('click', () => {
-    set(ref(db, 'configuracion/alerta/activa'), false);
-});
+const btnQuitAlerta = document.getElementById('btn-quitar-alerta');
+if (btnQuitAlerta) {
+    btnQuitAlerta.addEventListener('click', () => {
+        set(ref(db, 'configuracion/alerta/activa'), false);
+    });
+}
 
-document.getElementById('btn-guardar-socio')?.addEventListener('click', () => {
-    const num = document.getElementById('socio-num')?.value;
-    const nombre = document.getElementById('socio-name')?.value;
-    const status = document.getElementById('socio-status')?.value;
-    if (num >= 1 && num <= 10 && nombre) {
-        set(ref(db, 'socios/' + num), { nombre, status });
-        alert("Socio #" + num + " guardado.");
-        if (document.getElementById('socio-name')) document.getElementById('socio-name').value = '';
-    }
-});
+const btnGuarSocio = document.getElementById('btn-guardar-socio');
+if (btnGuarSocio) {
+    btnGuarSocio.addEventListener('click', () => {
+        const num = document.getElementById('socio-num').value;
+        const nombre = document.getElementById('socio-name').value;
+        const status = document.getElementById('socio-status').value;
+        if (num >= 1 && num <= 10 && nombre) {
+            set(ref(db, 'socios/' + num), { nombre, status });
+            alert(`Socio #${num} guardado.`);
+            document.getElementById('socio-name').value = '';
+        }
+    });
+}
 
-// PUBLICAR NUEVA ENCUESTA (ARCHIVA LA ANTERIOR)
-document.getElementById('btn-publicar-quiz')?.addEventListener('click', async () => {
-    const preguntaEl = document.getElementById('quiz-question');
-    const opt1El = document.getElementById('quiz-opt1');
-    const opt2El = document.getElementById('quiz-opt2');
-    const opt3El = document.getElementById('quiz-opt3');
-    const opt4El = document.getElementById('quiz-opt4');
+const btnPubQuiz = document.getElementById('btn-publicar-quiz');
+if (btnPubQuiz) {
+    btnPubQuiz.addEventListener('click', () => {
+        const pregunta = document.getElementById('quiz-question').value;
+        const opt1 = document.getElementById('quiz-opt1').value;
+        const opt2 = document.getElementById('quiz-opt2').value;
+        const opt3 = document.getElementById('quiz-opt3').value;
+        const opt4 = document.getElementById('quiz-opt4').value;
 
-    const pregunta = preguntaEl ? preguntaEl.value : '';
-    const opt1 = opt1El ? opt1El.value : '';
-    const opt2 = opt2El ? opt2El.value : '';
-    const opt3 = opt3El ? opt3El.value : '';
-    const opt4 = opt4El ? opt4El.value : '';
+        if (pregunta && opt1 && opt2) {
+            const quizData = { pregunta, opciones: [opt1, opt2, opt3, opt4].filter(o => o !== "") };
+            set(ref(db, 'cuestionario_activo'), quizData);
+            push(ref(db, 'historial_encuestas'), quizData);
+            set(ref(db, 'partido_actual'), null);
+            alert("¡Cuestionario lanzado y guardado en el historial!");
+            document.getElementById('quiz-question').value = '';
+            document.getElementById('quiz-opt1').value = '';
+            document.getElementById('quiz-opt2').value = '';
+            document.getElementById('quiz-opt3').value = '';
+            document.getElementById('quiz-opt4').value = '';
+        } else {
+            alert("Rellena la pregunta y al menos 2 opciones.");
+        }
+    });
+}
 
-    if (pregunta && opt1 && opt2) {
-        const actSnap = await get(ref(db, 'cuestionario_activo'));
-        if (actSnap.exists()) {
-            const encuestaAntigua = actSnap.val();
-            let totalVotos = 0;
-            if (encuestaAntigua.votos) {
-                Object.values(encuestaAntigua.votos).forEach(v => totalVotos += (v || 0));
-            }
-
-            push(ref(db, 'cuestionarios_anteriores'), {
-                ...encuestaAntigua,
-                totalVotos,
-                fechaFinalizado: new Date().toLocaleDateString()
+const btnPubNews = document.getElementById('btn-publicar-news');
+if (btnPubNews) {
+    btnPubNews.addEventListener('click', () => {
+        const titulo = document.getElementById('news-title').value;
+        const resumen = document.getElementById('news-desc').value;
+        const categoria = document.getElementById('news-cat').value || 'DEBATE';
+        if (titulo && resumen) {
+            const noticiaData = { categoria, titulo, resumen };
+            push(ref(db, 'noticias'), noticiaData).then(() => { 
+                alert("¡Debate publicado con éxito!");
+                document.getElementById('news-title').value = '';
+                document.getElementById('news-desc').value = '';
             });
         }
+    });
+}
 
-        const nuevaEncuesta = { 
-            pregunta, 
-            opciones: [opt1, opt2, opt3, opt4].filter(o => o !== "") 
-        };
-
-        await set(ref(db, 'cuestionario_activo'), nuevaEncuesta);
-        await push(ref(db, 'historial_encuestas'), nuevaEncuesta);
-        await set(ref(db, 'partido_actual'), null);
-
-        alert("¡Cuestionario publicado! La encuesta anterior se guardó en el historial.");
-        if (preguntaEl) preguntaEl.value = '';
-        if (opt1El) opt1El.value = '';
-        if (opt2El) opt2El.value = '';
-        if (opt3El) opt3El.value = '';
-        if (opt4El) opt4El.value = '';
-    } else {
-        alert("Rellena la pregunta y al menos 2 opciones.");
-    }
-});
-
-// PUBLICAR NUEVA NOTICIA / DEBATE
-document.getElementById('btn-publicar-news')?.addEventListener('click', () => {
-    const tituloEl = document.getElementById('news-title');
-    const resumenEl = document.getElementById('news-desc');
-    const catEl = document.getElementById('news-cat');
-
-    const titulo = tituloEl ? tituloEl.value : '';
-    const resumen = resumenEl ? resumenEl.value : '';
-    const categoria = catEl && catEl.value ? catEl.value : 'DEBATE';
-    
-    if (titulo && resumen) {
-        const fechaActual = new Date().toLocaleDateString('es-ES', { 
-            day: '2-digit', 
-            month: 'short', 
-            year: 'numeric' 
-        });
-
-        push(ref(db, 'noticias'), { 
-            categoria, 
-            titulo, 
-            resumen,
-            fecha: fechaActual 
-        }).then(() => { 
-            alert("¡Debate publicado con éxito!");
-            if (tituloEl) tituloEl.value = '';
-            if (resumenEl) resumenEl.value = '';
-        });
-    } else {
-        alert("Rellena el título y la descripción.");
-    }
-});
-
-// Historiales en Panel Admin
 const historialEncuestasDiv = document.getElementById('historial-encuestas');
 const historialDebatesDiv = document.getElementById('historial-debates');
 
@@ -573,7 +646,39 @@ if (historialEncuestasDiv && historialDebatesDiv) {
     });
 }
 
-// Cambios de Tema
+window.reusarEncuesta = (key) => {
+    get(ref(db, `historial_encuestas/${key}`)).then(snap => {
+        if (snap.exists()) {
+            set(ref(db, 'cuestionario_activo'), snap.val());
+            set(ref(db, 'partido_actual'), null);
+            alert("¡Encuesta restaurada y activa en la web!");
+        }
+    });
+};
+
+window.borrarHistorial = (path, key) => {
+    if (confirm("¿Seguro que quieres eliminar este elemento?")) {
+        remove(ref(db, `${path}/${key}`)).then(() => {
+            alert("Eliminado correctamente.");
+        });
+    }
+};
+
+const statsCard = document.getElementById('admin-visitas');
+if (statsCard) {
+    onValue(ref(db, 'estadisticas'), (snapshot) => {
+        const stats = snapshot.val() || {};
+        document.getElementById('admin-visitas').innerText = stats.visitas || 0;
+        document.getElementById('admin-clicks').innerText = stats.clicks || 0;
+        let conv = stats.visitas > 0 ? ((stats.clicks / stats.visitas) * 100).toFixed(1) : 0;
+        document.getElementById('calc-conversion').innerHTML = `<strong>Conversión:</strong> ${conv}% tocan el botón WA.`;
+    });
+    document.getElementById('btn-guardar-seguidores')?.addEventListener('click', () => {
+        const s = document.getElementById('input-seguidores').value;
+        if (s) set(ref(db, 'estadisticas/seguidores'), Number(s));
+    });
+}
+
 const changeTheme = (themeName, isAuto) => {
     set(ref(db, 'configuracion/tema_actual'), themeName);
     set(ref(db, 'configuracion/tema_auto'), isAuto);
@@ -584,21 +689,45 @@ document.getElementById('btn-tema-match')?.addEventListener('click', () => chang
 document.getElementById('btn-tema-champions')?.addEventListener('click', () => changeTheme('champions', false));
 document.getElementById('btn-tema-mundial')?.addEventListener('click', () => changeTheme('mundial', false));
 
-// Cambiar Contraseña
-document.getElementById('btn-cambiar-pass')?.addEventListener('click', () => {
-    const inputPass = document.getElementById('admin-new-pass');
-    const nuevaPass = inputPass ? inputPass.value.trim() : '';
-    if (nuevaPass.length >= 4) {
-        set(ref(db, 'configuracion/admin_password'), nuevaPass).then(() => {
-            alert("¡Contraseña actualizada!");
-            if (inputPass) inputPass.value = '';
+// --- A. NAVEGACIÓN POR PESTAÑAS EN EL ADMIN ---
+document.addEventListener('DOMContentLoaded', () => {
+    const adminNavBtns = document.querySelectorAll('.admin-nav-btn');
+    const adminSections = document.querySelectorAll('.admin-section');
+
+    if (adminNavBtns.length > 0 && adminSections.length > 0) {
+        adminNavBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetId = e.currentTarget.getAttribute('data-target');
+                
+                adminNavBtns.forEach(b => b.classList.remove('active'));
+                adminSections.forEach(sec => sec.style.display = 'none');
+
+                e.currentTarget.classList.add('active');
+                const targetSec = document.getElementById(targetId);
+                if (targetSec) targetSec.style.display = 'block';
+            });
         });
-    } else {
-        alert("La contraseña debe tener al menos 4 caracteres.");
+        adminNavBtns[0].click();
     }
 });
 
-// Ver votos activos
+// --- B. CAMBIO DE CONTRASEÑA DE ADMINISTRADOR ---
+const btnCambiarPass = document.getElementById('btn-cambiar-pass');
+if (btnCambiarPass) {
+    btnCambiarPass.addEventListener('click', () => {
+        const nuevaPass = document.getElementById('admin-new-pass').value.trim();
+        if (nuevaPass.length >= 4) {
+            set(ref(db, 'configuracion/admin_password'), nuevaPass).then(() => {
+                alert("¡Contraseña de administrador actualizada con éxito!");
+                document.getElementById('admin-new-pass').value = '';
+            });
+        } else {
+            alert("La contraseña debe tener al menos 4 caracteres.");
+        }
+    });
+}
+
+// --- C. PANEL ADMIN: VER VOTOS DE LA ENCUESTA ACTUAL ---
 const adminVotosContainer = document.getElementById('admin-votos-activos');
 if (adminVotosContainer) {
     onValue(ref(db, 'cuestionario_activo'), (snap) => {
@@ -617,7 +746,7 @@ if (adminVotosContainer) {
             html += `</ul>`;
             adminVotosContainer.innerHTML = html;
         } else {
-            adminVotosContainer.innerHTML = `<p style="color:var(--text-muted);">No hay cuestionario activo en este momento.</p>`;
+            adminVotosContainer.innerHTML = `<p style="color:var(--text-muted);">No hay ningún cuestionario activo en este momento para ver votos.</p>`;
         }
     });
 }
