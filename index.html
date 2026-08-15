@@ -10,29 +10,21 @@
 <body>
     
     <nav class="navbar">
-    <div class="logo">FÚTBOL Y MÁS</div>
-    
-    <button class="hamburger" id="hamburger-btn" aria-label="Menú">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-    </button>
-
-    <div class="nav-links" id="nav-links">
-        <a href="#panel-porra">Participación</a>
-        <a href="#panel-debates">Debates</a>
-        <a href="#panel-vip">Club de los 10</a>
-        
-        <!-- ZONA DINÁMICA DE USUARIO -->
-        <div id="user-auth-zone" style="display: inline-flex; align-items: center; margin-left: 2rem;">
-            <!-- Se rellenará automáticamente desde JS -->
-            <a href="login.html" class="btn-action" style="padding: 6px 16px; font-size: 0.9rem;">Iniciar Sesión</a>
+        <div class="logo">FYM</div>
+        <button class="hamburger" id="hamburger-btn">
+            <svg viewBox="0 0 100 80" width="30" height="30" fill="currentColor">
+                <rect width="100" height="15" rx="8"></rect>
+                <rect y="30" width="100" height="15" rx="8"></rect>
+                <rect y="60" width="100" height="15" rx="8"></rect>
+            </svg>
+        </button>
+        <div class="nav-links" id="nav-links">
+            <a href="#panel-porra">Zona Interactiva</a>
+            <a href="#panel-debates">Debates</a>
+            <a href="#panel-vip">Club 10</a>
+            <a href="admin.html" class="btn-admin">⚙️ Admin</a>
         </div>
-    </div>
-</nav>
-
+    </nav>
 
     <!-- BANNER DE ALERTAS GLOBAL -->
     <a id="alert-banner" href="#" target="_blank" style="display: none; background: var(--accent); color: white; text-align: center; padding: 12px; font-weight: bold; text-decoration: none; text-transform: uppercase;">
@@ -297,43 +289,28 @@
 </script>
 <!-- ================================================== -->
         
-        <!-- ================================================== -->
-<!-- ESTRUCTURA REORGANIZADA DE ZONA PARTICIPATIVA      -->
-<!-- ================================================== -->
+        <!-- ZONA DE PARTIDOS / CUESTIONARIOS -->
+        <section id="panel-porra" class="panel-box">
+            <h2 class="panel-title" id="panel-interactivo-titulo">🔥 ZONA DE PARTICIPACIÓN</h2>
+            <div id="partido-container" class="partido-card">
+                <p>Cargando contenido...</p>
+            </div>
+        </section>
 
-<!-- 1. 🔥 ZONA DE PARTICIPACIÓN (PORRAS Y ENCUESTAS) -->
-<section id="panel-porra" class="panel-box">
-    <h2 class="panel-title" id="panel-interactivo-titulo">🔥 ZONA DE PARTICIPACIÓN</h2>
-    
-    <!-- Contenedor principal donde se cargará la encuesta activa -->
-    <div id="partido-container" class="partido-card">
-        <p>Cargando contenido interactivo...</p>
-    </div>
-</section>
+        <!-- DEBATES CON CAJA DE COMENTARIOS PROPIA -->
+        <section id="panel-debates" class="panel-box">
+            <h2 class="panel-title">🗣️ DEBATES Y OPINIÓN</h2>
+            <div class="news-grid" id="news-container">
+                <p class="loading-text">Buscando salseo...</p>
+            </div>
+        </section>
 
-<!-- 2. 🗣️ DEBATES Y OPINIÓN (CON COMENTARIOS DESPLEGABLES) -->
-<section id="panel-debates" class="panel-box">
-    <h2 class="panel-title">🗣️ DEBATES Y OPINIÓN</h2>
-    
-    <!-- Rejilla con las tarjetas de debate -->
-    <div class="news-grid" id="news-container">
-        <p class="loading-text">Buscando salseo...</p>
-    </div>
-</section>
-
-<!-- 3. 🏆 CLUB DE LOS 10 (CARNETS VIP) -->
-<section id="panel-vip" class="panel-box">
-    <h2 class="panel-title">🏆 CLUB DE LOS 10</h2>
-    <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
-        Los dueños de la comunidad. Solo 10 plazas disponibles.
-    </p>
-    
-    <!-- Rejilla para los carnets -->
-    <div class="carnets-grid" id="carnets-container">
-        <!-- Generado dinámicamente desde JS -->
-    </div>
-</section>
-
+        <!-- CLUB DE LOS 10 -->
+        <section id="panel-vip" class="panel-box">
+            <h2 class="panel-title">🏆 CLUB DE LOS 10</h2>
+            <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Los dueños de la comunidad. Solo 10 plazas.</p>
+            <div class="carnets-grid" id="carnets-container"></div>
+        </section>
 
     </div>
 
