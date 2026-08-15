@@ -149,24 +149,6 @@ h1, h2, h3, .logo { font-family: 'Oswald', sans-serif; text-transform: uppercase
     box-sizing: border-box;
 }
 
-.ver-todos-link {
-    color: var(--accent, #ff4757);
-    font-weight: 600;
-    text-decoration: none;
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.ver-todos-link:hover {
-    color: #fff;
-    background: var(--accent, #ff4757);
-    transform: translateY(-2px);
-}
-
 
 /* =========================================
    FOOTER
